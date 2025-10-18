@@ -34,19 +34,7 @@ const AdminDashboard = () => {
       
       const { data, error } = await supabase
         .from('entries')
-        .select(`
-          id,
-          entry_type,
-          selfie_url,
-          timestamp,
-          notes,
-          user_id,
-          users (
-            name,
-            user_type,
-            house_number
-          )
-        `)
+        .select('*')
         .order('timestamp', { ascending: false })
 
       if (error) {
@@ -59,11 +47,16 @@ const AdminDashboard = () => {
       console.log('✅ AdminDashboard loaded successfully:', safeData.length, 'entries')
       console.log('📊 Sample entry data:', safeData[0])
       
+      if (safeData.length === 0) {
+        console.log('⚠️ No entries found in database')
+        toast.error('⚠️ Tiada data ditemui — semak Supabase connection.')
+      }
+      
       setEntries(safeData)
       setFilteredEntries(safeData)
     } catch (error) {
       console.error('❌ Error fetching entries:', error)
-      toast.error('Gagal memuat rekod. Cuba semula.')
+      toast.error('⚠️ Tiada data ditemui — semak Supabase connection.')
       // Set empty arrays on error to prevent crashes
       setEntries([])
       setFilteredEntries([])
@@ -373,14 +366,17 @@ const AdminDashboard = () => {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {safeEntry.users?.name || 'Unknown'}
+                            {safeEntry.notes?.includes('Guard') ? 'Reported by Guard' : 'Visitor Entry'}
                           </div>
                           <div className="text-sm text-gray-500">
                             ID: {safeEntry.id?.slice(-8) || 'N/A'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {safeEntry.users?.house_number || 'N/A'}
+                          {safeEntry.notes?.includes('(') ? 
+                            safeEntry.notes.split('(')[1]?.replace(')', '') || 'N/A' : 
+                            'N/A'
+                          }
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {formatTimestamp(safeTimestamp)}

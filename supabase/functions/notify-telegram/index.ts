@@ -15,7 +15,8 @@ serve(async (req) => {
   console.log('Public access request received')
 
   try {
-    const { record } = await req.json()
+    const payload = await req.json()
+    console.log('📦 Received payload:', payload)
     
     // Get environment variables
     const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')
@@ -32,13 +33,21 @@ serve(async (req) => {
       )
     }
 
+    // Handle both old and new payload formats
+    const name = payload.name || payload.record?.users?.name || 'Unknown'
+    const houseNumber = payload.house_number || payload.record?.users?.house_number || 'N/A'
+    const entryType = payload.entry_type || payload.record?.entry_type || 'normal'
+    const timestamp = payload.timestamp || payload.record?.timestamp || new Date().toISOString()
+    const notes = payload.notes || payload.record?.notes || ''
+    const selfieUrl = payload.selfie_url || payload.record?.selfie_url
+
     // Format the message
     const message = `🚪 *New Entry Detected*
-Name: ${record.users?.name || 'Unknown'}
-House: ${record.users?.house_number || 'N/A'}
-Type: ${record.entry_type === 'forced_by_guard' ? 'Forced Entry' : 'Normal Entry'}
-Time: ${new Date(record.timestamp).toLocaleString()}
-${record.notes ? `Notes: ${record.notes}` : ''}`
+Name: ${name}
+House: ${houseNumber}
+Type: ${entryType === 'forced_by_guard' ? 'Forced Entry' : 'Normal Entry'}
+Time: ${new Date(timestamp).toLocaleString()}
+${notes ? `Notes: ${notes}` : ''}`
 
     // Send text message
     console.log('Sending Telegram message...')
@@ -65,13 +74,13 @@ ${record.notes ? `Notes: ${record.notes}` : ''}`
     }
 
     // Send photo if available
-    if (record.selfie_url) {
+    if (selfieUrl) {
       console.log('Sending Telegram photo...')
       try {
         const formData = new FormData()
         formData.append('chat_id', TELEGRAM_CHAT_ID)
-        formData.append('photo', record.selfie_url)
-        formData.append('caption', `Entry photo for ${record.users?.name || 'Unknown'}`)
+        formData.append('photo', selfieUrl)
+        formData.append('caption', `Entry photo for ${name}`)
         
         const photoResponse = await fetch(
           `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,

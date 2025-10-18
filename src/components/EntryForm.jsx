@@ -222,64 +222,68 @@ const EntryForm = () => {
         return
       }
 
-      // Upload selfie to Supabase Storage
+      console.log('🚀 Starting EntryForm submission...')
+
+      // Step 1: Upload selfie to Supabase Storage
       const fileName = `${Date.now()}_${formData.name.replace(/\s+/g, '_')}.jpg`
+      console.log('📤 Uploading image:', fileName)
       const selfieUrl = await uploadImage(selfie, fileName)
-
-      // Insert user and entry to database
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .insert({
-          name: formData.name,
-          user_type: 'visitor',
-          house_number: formData.house_number
-        })
-        .select()
-        .single()
-
-      if (userError) {
-        console.error('User insert error:', userError)
-        throw new Error('Gagal menyimpan data pengguna')
+      if (!selfieUrl) {
+        throw new Error("Gagal muat naik gambar")
       }
+      console.log('✅ Image uploaded:', selfieUrl)
 
-      const { data: entryData, error: entryError } = await supabase
+      // Step 2: Save to Supabase database
+      console.log('💾 Saving to database...')
+      const { data: entryData, error: dbError } = await supabase
         .from('entries')
         .insert({
-          user_id: userData.id,
           entry_type: 'normal',
           selfie_url: selfieUrl,
-          notes: 'Entry from visitor registration'
+          notes: `Visitor Check-In: ${formData.name} (${formData.house_number})`,
+          timestamp: new Date().toISOString(),
         })
         .select()
         .single()
 
-      if (entryError) {
-        console.error('Entry insert error:', entryError)
-        throw new Error('Gagal menyimpan rekod kemasukan')
+      if (dbError) {
+        console.error('❌ Database error:', dbError)
+        throw dbError
+      }
+      console.log('✅ Database saved:', entryData)
+
+      // Step 3: Notify Telegram
+      console.log('📱 Sending Telegram notification...')
+      const telegramPayload = {
+        name: formData.name,
+        house_number: formData.house_number,
+        entry_type: 'normal',
+        timestamp: new Date().toISOString(),
+        selfie_url: selfieUrl,
       }
 
-      // Prepare payload for Edge Function
-      const payload = {
-        record: {
-          id: entryData.id,
-          user_id: userData.id,
-          entry_type: 'normal',
-          selfie_url: selfieUrl,
-          notes: 'Entry from visitor registration',
-          timestamp: entryData.timestamp,
-          users: {
-            name: formData.name,
-            user_type: 'visitor',
-            house_number: formData.house_number
-          }
-        }
+      const res = await fetch('https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`
+        },
+        body: JSON.stringify(telegramPayload),
+      })
+
+      console.log('📊 Telegram response status:', res.status)
+      
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error('❌ Telegram error:', errorText)
+        throw new Error(`Telegram error: ${errorText}`)
       }
 
-      // Send notification to Telegram
-      await notifyTelegram(payload)
+      const telegramResult = await res.json()
+      console.log('✅ Telegram notification sent:', telegramResult)
 
       // Show success message
-      toast.success('Rekod berjaya dihantar ke admin.')
+      toast.success('✅ Data berjaya dihantar ke admin')
 
       // Reset form
       setFormData({ name: '', house_number: '' })
@@ -288,8 +292,8 @@ const EntryForm = () => {
       setCaptured(false)
 
     } catch (error) {
-      console.error('Submission error:', error)
-      toast.error(error.message || 'Gagal hantar data. Cuba semula.')
+      console.error('❌ Submission error:', error)
+      toast.error(error.message || 'Gagal menyimpan data pengguna')
     } finally {
       setLoading(false)
     }

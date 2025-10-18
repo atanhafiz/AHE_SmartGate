@@ -271,14 +271,64 @@ const GuardDashboard = () => {
         return
       }
 
-      // Upload photo to Supabase Storage
+      console.log('🚀 Starting GuardDashboard submission...')
+
+      // Step 1: Upload photo to Supabase Storage
+      console.log('📤 Uploading guard photo...')
       const selfieUrl = await uploadImage(photo)
+      if (!selfieUrl) {
+        throw new Error("Gagal muat naik gambar")
+      }
+      console.log('✅ Image uploaded:', selfieUrl)
 
-      // Insert entry to database
-      await insertEntry(selfieUrl)
+      // Step 2: Save to Supabase database
+      console.log('💾 Saving to database...')
+      const { data: entryData, error: dbError } = await supabase
+        .from('entries')
+        .insert({
+          entry_type: 'forced_by_guard',
+          selfie_url: selfieUrl,
+          notes: notes || 'Guard reported incident',
+          timestamp: new Date().toISOString(),
+        })
+        .select()
+        .single()
 
-      // Send Telegram notification
-      await notifyTelegram(selfieUrl)
+      if (dbError) {
+        console.error('❌ Database error:', dbError)
+        throw dbError
+      }
+      console.log('✅ Database saved:', entryData)
+
+      // Step 3: Notify Telegram
+      console.log('📱 Sending Telegram notification...')
+      const telegramPayload = {
+        name: 'Reported by Guard',
+        house_number: '-',
+        entry_type: 'forced_by_guard',
+        timestamp: new Date().toISOString(),
+        selfie_url: selfieUrl,
+      }
+
+      const res = await fetch('https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`
+        },
+        body: JSON.stringify(telegramPayload),
+      })
+
+      console.log('📊 Telegram response status:', res.status)
+      
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error('❌ Telegram error:', errorText)
+        throw new Error(`Telegram error: ${errorText}`)
+      }
+
+      const telegramResult = await res.json()
+      console.log('✅ Telegram notification sent:', telegramResult)
 
       // Show success message
       toast.success('🚨 Laporan berjaya dihantar ke admin.')
@@ -290,7 +340,7 @@ const GuardDashboard = () => {
       setNotes('')
 
     } catch (error) {
-      console.error('Submission error:', error)
+      console.error('❌ Submission error:', error)
       toast.error(error.message || 'Gagal hantar laporan. Cuba semula.')
     } finally {
       setLoading(false)
