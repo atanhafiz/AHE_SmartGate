@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { useSession } from '../hooks/useSession'
 import toast from 'react-hot-toast'
 
 const AdminDashboard = () => {
@@ -12,6 +13,18 @@ const AdminDashboard = () => {
     endDate: '',
     entryType: 'all'
   })
+  const { profile, signOut } = useSession()
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Gagal keluar. Cuba semula.')
+    }
+  }
 
   // Fetch entries from Supabase
   const fetchEntries = async () => {
@@ -194,9 +207,23 @@ const AdminDashboard = () => {
   return (
     <div className="bg-sky-50 min-h-screen p-4">
       <div className="bg-white shadow-xl rounded-xl p-6 max-w-7xl mx-auto">
-        <h1 className="text-2xl font-bold text-sky-700 mb-6 text-center">
-          AHE SmartGate Dashboard
-        </h1>
+        {/* Header with logout button */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-sky-700">
+            AHE SmartGate Dashboard
+          </h1>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-md text-sm"
+          >
+            Keluar
+          </button>
+        </div>
+        
+        {/* User info */}
+        <div className="text-sm text-gray-600 mb-4 text-center">
+          Logged in as: {profile?.full_name || 'Admin'} ({profile?.role || 'admin'})
+        </div>
 
         {/* Filter Controls */}
         <div className="bg-gray-50 rounded-lg p-4 mb-6">

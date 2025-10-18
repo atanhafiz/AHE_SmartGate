@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { useSession } from '../hooks/useSession'
 import toast from 'react-hot-toast'
 
 const GuardDashboard = () => {
@@ -13,6 +14,18 @@ const GuardDashboard = () => {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
+  const { profile, signOut } = useSession()
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Gagal keluar. Cuba semula.')
+    }
+  }
 
   // Start camera
   const startCamera = async () => {
@@ -227,9 +240,23 @@ const GuardDashboard = () => {
   return (
     <div className="bg-sky-50 min-h-screen flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold text-sky-700 mb-6">
-          🚨 Laporan Guard
-        </h1>
+        {/* Header with logout button */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-sky-700">
+            🚨 Laporan Guard
+          </h1>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-md text-sm"
+          >
+            Keluar
+          </button>
+        </div>
+        
+        {/* User info */}
+        <div className="text-sm text-gray-600 mb-4">
+          Logged in as: {profile?.full_name || 'Guard'} ({profile?.role || 'guard'})
+        </div>
         <p className="text-gray-600 mb-6">
           Ambil gambar dan laporkan kejadian yang mencurigakan
         </p>

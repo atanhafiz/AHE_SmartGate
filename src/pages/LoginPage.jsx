@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
+import { useSession } from '../hooks/useSession'
 import toast from 'react-hot-toast'
 
 const LoginPage = () => {
@@ -8,7 +8,7 @@ const LoginPage = () => {
     password: ''
   })
   const [loading, setLoading] = useState(false)
-  const { signIn } = useAuth()
+  const { signIn } = useSession()
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -29,8 +29,8 @@ const LoginPage = () => {
         toast.error(error.message)
       } else {
         toast.success('Login successful!')
-        // Redirect based on user role or to admin dashboard
-        window.location.href = '/admin'
+        // Redirect will be handled by ProtectedRoute based on user role
+        window.location.href = '/'
       }
     } catch (error) {
       toast.error('Login failed. Please try again.')
