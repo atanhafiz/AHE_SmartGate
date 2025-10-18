@@ -112,11 +112,28 @@ function App() {
                 📊 Admin Dashboard
               </NavLink>
 
-              {/* Right Side: Login + Theme */}
+              {/* Right Side: User Info + Theme */}
               <div className="flex items-center space-x-3">
-                <NavLink to="/login" className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1 rounded-md text-sm font-semibold shadow-sm transition-colors">
-                  Login
-                </NavLink>
+                {session ? (
+                  <>
+                    <span className="text-sm text-gray-200">
+                      Welcome, {profile?.full_name || 'User'} ({profile?.role})
+                    </span>
+                    <button
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        window.location.href = "/login";
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <NavLink to="/login" className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1 rounded-md text-sm font-semibold shadow-sm transition-colors">
+                    Login
+                  </NavLink>
+                )}
                 <button
                   onClick={() => setDarkMode(!darkMode)}
                   className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
@@ -163,9 +180,27 @@ function App() {
               >
                 📊 Admin Dashboard
               </NavLink>
-              <NavLink to="/login" className="block w-full bg-indigo-500 hover:bg-indigo-600 py-2 rounded-md font-semibold text-center transition-colors" onClick={() => setMenuOpen(false)}>
-                Login
-              </NavLink>
+              {session ? (
+                <>
+                  <div className="text-center text-sm text-gray-200 mb-2">
+                    Welcome, {profile?.full_name || 'User'} ({profile?.role})
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      window.location.href = "/login";
+                      setMenuOpen(false);
+                    }}
+                    className="w-full bg-red-500 hover:bg-red-600 py-2 rounded-md font-semibold text-center transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <NavLink to="/login" className="block w-full bg-indigo-500 hover:bg-indigo-600 py-2 rounded-md font-semibold text-center transition-colors" onClick={() => setMenuOpen(false)}>
+                  Login
+                </NavLink>
+              )}
               <button
                 onClick={() => {
                   setDarkMode(!darkMode);
