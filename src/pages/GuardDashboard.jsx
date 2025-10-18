@@ -27,14 +27,36 @@ const GuardDashboard = () => {
     }
   }
 
-  // Start camera
+  // Start camera with fallback
   const startCamera = async () => {
     try {
       console.log("🎥 Starting camera...")
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
-        audio: false,
-      })
+      
+      // Try back camera first (environment facing mode)
+      let stream
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { 
+            facingMode: { ideal: "environment" },
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          },
+          audio: false,
+        })
+        console.log("✅ Back camera (environment) started")
+      } catch (envError) {
+        console.log("⚠️ Back camera not available, trying front camera...")
+        // Fallback to front camera (user facing mode)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { 
+            facingMode: { ideal: "user" },
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          },
+          audio: false,
+        })
+        console.log("✅ Front camera (user) started")
+      }
 
       streamRef.current = stream
 
@@ -48,12 +70,26 @@ const GuardDashboard = () => {
             setCameraActive(true)
           } catch (playError) {
             console.warn("⚠️ Video play() interrupted:", playError)
+            // Try to start again after user interaction
+            setCameraActive(false)
           }
         }, 300)
       }
     } catch (err) {
       console.error("❌ Camera access error:", err)
-      alert("Kamera tidak dapat diakses. Pastikan permission kamera telah dibenarkan.")
+      setCameraActive(false)
+      
+      let errorMessage = '❌ Kamera tidak dapat diakses. Sila pastikan anda benarkan akses kamera dalam pelayar.'
+      
+      if (err.name === 'NotAllowedError') {
+        errorMessage = '❌ Akses kamera ditolak. Sila benarkan akses kamera dan cuba lagi.'
+      } else if (err.name === 'NotFoundError') {
+        errorMessage = '❌ Tiada kamera ditemui. Sila pastikan peranti mempunyai kamera.'
+      } else if (err.name === 'NotSupportedError') {
+        errorMessage = '❌ Pelayar tidak menyokong kamera. Cuba gunakan pelayar lain.'
+      }
+      
+      toast.error(errorMessage)
     }
   }
 
@@ -133,13 +169,30 @@ const GuardDashboard = () => {
   // Insert entry to database
   const insertEntry = async (selfieUrl) => {
     try {
+      // First create a user record for the guard report
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .insert({
+          name: 'Reported by Guard',
+          user_type: 'visitor',
+          house_number: '-'
+        })
+        .select()
+        .single()
+
+      if (userError) {
+        console.error('User insert error:', userError)
+        throw new Error('Gagal menyimpan data pengguna')
+      }
+
+      // Then create the entry record
       const { data, error } = await supabase
         .from('entries')
         .insert([{
+          user_id: userData.id,
           entry_type: 'forced_by_guard',
           selfie_url: selfieUrl,
-          notes: notes || 'Guard reported incident',
-          timestamp: new Date().toISOString()
+          notes: notes || 'Guard reported incident'
         }])
         .select()
 
@@ -170,8 +223,10 @@ const GuardDashboard = () => {
         }
       }
 
-      const functionUrl = 'https://kpukhpavdxidnoexfljv.functions.supabase.co/notify-telegram'
+      // Use correct Edge Function URL with /functions/v1
+      const functionUrl = 'https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram'
       console.log('📤 Sending Telegram payload to:', functionUrl)
+      console.log('📦 Payload:', payload)
       
       const response = await fetch(functionUrl, {
         method: 'POST',
@@ -187,15 +242,20 @@ const GuardDashboard = () => {
       if (!response.ok) {
         const errorText = await response.text()
         console.error('❌ Telegram send failed', errorText)
-        const errorData = JSON.parse(errorText).catch(() => ({ error: errorText }))
-        throw new Error(errorData.error || 'Gagal menghantar notifikasi')
+        console.error('❌ Response headers:', response.headers)
+        try {
+          const errorData = JSON.parse(errorText)
+          throw new Error(errorData.error || 'Gagal menghantar notifikasi')
+        } catch (parseError) {
+          throw new Error(`HTTP ${response.status}: ${errorText}`)
+        }
       }
 
       const result = await response.json()
       console.log('✅ Telegram notification sent successfully:', result)
       return result
     } catch (error) {
-      console.error('Telegram notification error:', error)
+      console.error('❌ Telegram notification error:', error)
       throw new Error('Gagal menghantar notifikasi ke admin')
     }
   }

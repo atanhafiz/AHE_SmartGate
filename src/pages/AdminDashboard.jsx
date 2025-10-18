@@ -30,23 +30,39 @@ const AdminDashboard = () => {
   const fetchEntries = async () => {
     try {
       setLoading(true)
+      console.log('🔍 Fetching entries from Supabase...')
+      
       const { data, error } = await supabase
         .from('entries')
-        .select('id, entry_type, selfie_url, timestamp, notes, user_id')
+        .select(`
+          id,
+          entry_type,
+          selfie_url,
+          timestamp,
+          notes,
+          user_id,
+          users (
+            name,
+            user_type,
+            house_number
+          )
+        `)
         .order('timestamp', { ascending: false })
 
       if (error) {
-        console.error('Supabase query error:', error)
+        console.error('❌ Supabase query error:', error)
         throw error
       }
       
       // Ensure data is an array and handle null/undefined cases
       const safeData = Array.isArray(data) ? data : []
+      console.log('✅ AdminDashboard loaded successfully:', safeData.length, 'entries')
+      console.log('📊 Sample entry data:', safeData[0])
+      
       setEntries(safeData)
       setFilteredEntries(safeData)
-      console.log('✅ AdminDashboard loaded successfully:', safeData.length, 'entries')
     } catch (error) {
-      console.error('Error fetching entries:', error)
+      console.error('❌ Error fetching entries:', error)
       toast.error('Gagal memuat rekod. Cuba semula.')
       // Set empty arrays on error to prevent crashes
       setEntries([])
@@ -357,14 +373,14 @@ const AdminDashboard = () => {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {safeEntry.user_id ? `User ${safeEntry.user_id.slice(-8)}` : 'Unknown'}
+                            {safeEntry.users?.name || 'Unknown'}
                           </div>
                           <div className="text-sm text-gray-500">
-                            Entry ID: {safeEntry.id?.slice(-8) || 'N/A'}
+                            ID: {safeEntry.id?.slice(-8) || 'N/A'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {safeEntry.user_id ? `User ${safeEntry.user_id.slice(-8)}` : 'N/A'}
+                          {safeEntry.users?.house_number || 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {formatTimestamp(safeTimestamp)}

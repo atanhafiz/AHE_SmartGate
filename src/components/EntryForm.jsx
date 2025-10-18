@@ -165,8 +165,10 @@ const EntryForm = () => {
   // Call Edge Function
   const notifyTelegram = async (payload) => {
     try {
-      const functionUrl = 'https://kpukhpavdxidnoexfljv.functions.supabase.co/notify-telegram'
+      // Use correct Edge Function URL with /functions/v1
+      const functionUrl = 'https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram'
       console.log('📤 Sending Telegram payload to:', functionUrl)
+      console.log('📦 Payload:', payload)
       
       const response = await fetch(functionUrl, {
         method: 'POST',
@@ -182,15 +184,20 @@ const EntryForm = () => {
       if (!response.ok) {
         const errorText = await response.text()
         console.error('❌ Telegram send failed', errorText)
-        const errorData = JSON.parse(errorText).catch(() => ({ error: errorText }))
-        throw new Error(errorData.error || 'Gagal menghantar notifikasi')
+        console.error('❌ Response headers:', response.headers)
+        try {
+          const errorData = JSON.parse(errorText)
+          throw new Error(errorData.error || 'Gagal menghantar notifikasi')
+        } catch (parseError) {
+          throw new Error(`HTTP ${response.status}: ${errorText}`)
+        }
       }
 
       const result = await response.json()
       console.log('✅ Telegram notification sent successfully:', result)
       return result
     } catch (error) {
-      console.error('Telegram notification error:', error)
+      console.error('❌ Telegram notification error:', error)
       throw new Error('Gagal menghantar notifikasi ke admin')
     }
   }
@@ -219,15 +226,47 @@ const EntryForm = () => {
       const fileName = `${Date.now()}_${formData.name.replace(/\s+/g, '_')}.jpg`
       const selfieUrl = await uploadImage(selfie, fileName)
 
+      // Insert user and entry to database
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .insert({
+          name: formData.name,
+          user_type: 'visitor',
+          house_number: formData.house_number
+        })
+        .select()
+        .single()
+
+      if (userError) {
+        console.error('User insert error:', userError)
+        throw new Error('Gagal menyimpan data pengguna')
+      }
+
+      const { data: entryData, error: entryError } = await supabase
+        .from('entries')
+        .insert({
+          user_id: userData.id,
+          entry_type: 'normal',
+          selfie_url: selfieUrl,
+          notes: 'Entry from visitor registration'
+        })
+        .select()
+        .single()
+
+      if (entryError) {
+        console.error('Entry insert error:', entryError)
+        throw new Error('Gagal menyimpan rekod kemasukan')
+      }
+
       // Prepare payload for Edge Function
       const payload = {
         record: {
-          id: `entry-${Date.now()}`,
-          user_id: `user-${Date.now()}`,
+          id: entryData.id,
+          user_id: userData.id,
           entry_type: 'normal',
           selfie_url: selfieUrl,
           notes: 'Entry from visitor registration',
-          timestamp: new Date().toISOString(),
+          timestamp: entryData.timestamp,
           users: {
             name: formData.name,
             user_type: 'visitor',
