@@ -17,34 +17,20 @@ const EntryForm = () => {
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
 
-  // Start camera with universal fallback
+  // Start camera with front-facing mode for selfies
   const startCamera = async () => {
     try {
       setCameraActive(true)
       
-      // Try to get camera with environment facing mode first (back camera on mobile)
-      let stream
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: { ideal: "environment" },
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-          },
-          audio: false
-        })
-      } catch (envError) {
-        // Fallback to user facing mode (front camera)
-        console.log('Environment camera not available, trying user camera...')
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: { ideal: "user" },
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-          },
-          audio: false
-        })
-      }
+      // Use front camera (user facing) for selfies
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: { ideal: "user" }, // ✅ FRONT CAMERA (SELFIE)
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+        audio: false
+      })
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream

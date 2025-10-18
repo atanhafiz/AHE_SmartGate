@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useSession } from './hooks/useSession'
 import { useState, useEffect } from 'react'
@@ -22,21 +22,21 @@ function App() {
   // Show loading while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen flex items-center justify-center bg-sky-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-600"></div>
       </div>
     )
   }
 
   const navLinks = [
-    { path: "/", label: "🏠 Visitor Check-In", public: true },
-    { path: "/guard", label: "🚨 Guard Dashboard", public: false, role: "guard" },
-    { path: "/admin", label: "📊 Admin Dashboard", public: false, role: "admin" },
+    { path: "/", label: "🏠 Visitor Check-In" },
+    { path: "/guard", label: "🛡️ Guard Dashboard" },
+    { path: "/admin", label: "📊 Admin Dashboard" },
   ]
 
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-sky-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
         <Toaster 
           position="top-right"
           toastOptions={{
@@ -62,139 +62,152 @@ function App() {
           }}
         />
         
-        {/* 🔹 ENHANCED NAVBAR */}
-        <nav className="bg-sky-700 dark:bg-gray-900 text-white py-3 shadow-md">
+        {/* 🔹 ENTERPRISE NAVBAR */}
+        <nav className="bg-sky-700 dark:bg-gray-900 text-white py-3 shadow-md relative z-50 transition-all">
           <div className="container mx-auto px-4 flex justify-between items-center">
-            {/* Left: Logo & Title */}
+            {/* Left: Logo */}
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center">
-                <span className="text-sky-700 font-bold text-lg">A</span>
-              </div>
-              <span className="font-bold text-lg">AHE SmartGate</span>
+              <img src="/favicon.ico" alt="SmartGate Logo" className="w-7 h-7 rounded-md" />
+              <span className="font-bold text-lg tracking-wide">AHE SmartGate</span>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden text-white text-2xl focus:outline-none hover:text-yellow-300 transition-colors"
+              className="md:hidden text-white text-2xl focus:outline-none"
             >
               ☰
             </button>
 
-            {/* Nav Links */}
-            <div
-              className={`${
-                menuOpen ? "block" : "hidden"
-              } md:flex space-y-2 md:space-y-0 md:space-x-6 absolute md:static top-14 left-0 w-full md:w-auto bg-sky-700 dark:bg-gray-900 md:bg-transparent p-4 md:p-0 z-50`}
-            >
-              {navLinks.map((link) => {
-                // Show public links or role-appropriate links
-                const shouldShow = link.public || (session && profile?.role === link.role)
-                
-                if (!shouldShow) return null
-
-                return (
-                  <NavLink
-                    key={link.path}
-                    to={link.path}
-                    onClick={() => setMenuOpen(false)}
-                    className={({ isActive }) =>
-                      `block text-white hover:text-yellow-300 font-semibold transition-colors ${
-                        isActive ? "underline decoration-yellow-400 decoration-2 underline-offset-4" : ""
-                      }`
-                    }
-                  >
-                    {link.label}
-                  </NavLink>
-                )
-              })}
-            </div>
-
-            {/* Right: User info, Dark Mode Toggle, Logout */}
-            <div className="hidden md:flex items-center space-x-4">
-              {/* Dark Mode Toggle */}
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="bg-gray-200 text-gray-800 px-3 py-1 rounded-lg text-sm font-semibold hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors"
+            {/* Desktop Links */}
+            <div className="hidden md:flex items-center space-x-6">
+              <NavLink
+                to="/"
+                className={({ isActive }) =>
+                  `font-semibold hover:text-yellow-300 ${
+                    isActive ? "underline decoration-yellow-400" : ""
+                  }`
+                }
               >
-                {darkMode ? "🌙 Dark" : "🌞 Light"}
-              </button>
+                🏠 Visitor Check-In
+              </NavLink>
+              <NavLink
+                to="/guard"
+                className={({ isActive }) =>
+                  `font-semibold hover:text-yellow-300 ${
+                    isActive ? "underline decoration-yellow-400" : ""
+                  }`
+                }
+              >
+                🛡️ Guard Dashboard
+              </NavLink>
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  `font-semibold hover:text-yellow-300 ${
+                    isActive ? "underline decoration-yellow-400" : ""
+                  }`
+                }
+              >
+                📊 Admin Dashboard
+              </NavLink>
 
-              {/* User info and logout */}
-              {session ? (
-                <>
-                  <span className="text-sm">
-                    Welcome, {profile?.full_name || 'User'} ({profile?.role})
-                  </span>
-                  <button
-                    onClick={signOut}
-                    className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition-colors"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <div className="flex space-x-2">
-                  <NavLink 
-                    to="/login" 
-                    className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm transition-colors"
-                  >
-                    Login
-                  </NavLink>
-                  <NavLink 
-                    to="/register" 
-                    className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm transition-colors"
-                  >
-                    Register
-                  </NavLink>
-                </div>
-              )}
+              {/* Right Side: Login + Theme */}
+              <div className="flex items-center space-x-3">
+                <NavLink to="/login" className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1 rounded-md text-sm font-semibold shadow-sm transition-colors">
+                  Login
+                </NavLink>
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  {darkMode ? "🌙 Dark" : "☀️ Light"}
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Mobile Dropdown */}
+          {menuOpen && (
+            <div className="md:hidden bg-sky-700 dark:bg-gray-800 text-white p-4 space-y-4 absolute top-full left-0 w-full z-50 transition-all duration-300">
+              <NavLink
+                to="/"
+                onClick={() => setMenuOpen(false)}
+                className={({ isActive }) =>
+                  `block hover:text-yellow-300 font-semibold ${
+                    isActive ? "underline decoration-yellow-400" : ""
+                  }`
+                }
+              >
+                🏠 Visitor Check-In
+              </NavLink>
+              <NavLink
+                to="/guard"
+                onClick={() => setMenuOpen(false)}
+                className={({ isActive }) =>
+                  `block hover:text-yellow-300 font-semibold ${
+                    isActive ? "underline decoration-yellow-400" : ""
+                  }`
+                }
+              >
+                🛡️ Guard Dashboard
+              </NavLink>
+              <NavLink
+                to="/admin"
+                onClick={() => setMenuOpen(false)}
+                className={({ isActive }) =>
+                  `block hover:text-yellow-300 font-semibold ${
+                    isActive ? "underline decoration-yellow-400" : ""
+                  }`
+                }
+              >
+                📊 Admin Dashboard
+              </NavLink>
+              <NavLink to="/login" className="block w-full bg-indigo-500 hover:bg-indigo-600 py-2 rounded-md font-semibold text-center transition-colors" onClick={() => setMenuOpen(false)}>
+                Login
+              </NavLink>
+              <button
+                onClick={() => {
+                  setDarkMode(!darkMode);
+                  setMenuOpen(false);
+                }}
+                className="w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white py-2 rounded-md font-semibold transition-colors"
+              >
+                {darkMode ? "🌙 Dark" : "☀️ Light"}
+              </button>
+            </div>
+          )}
         </nav>
 
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          
-          {/* Entry form - accessible to all */}
-          <Route path="/" element={<EntryForm />} />
-          
-          {/* Protected routes */}
-          <Route 
-            path="/guard" 
-            element={
-              <ProtectedRoute role="guard">
-                <GuardDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute role="admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Redirect authenticated users to appropriate dashboard */}
-          <Route 
-            path="/dashboard" 
-            element={
-              session ? (
-                profile?.role === 'admin' ? (
-                  <Navigate to="/admin" replace />
-                ) : (
-                  <Navigate to="/guard" replace />
-                )
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            } 
-          />
-        </Routes>
+        {/* 🔹 ROUTES */}
+        <main className="min-h-screen bg-sky-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            
+            {/* Entry form - accessible to all */}
+            <Route path="/" element={<EntryForm />} />
+            
+            {/* Protected routes */}
+            <Route 
+              path="/guard" 
+              element={
+                <ProtectedRoute role="guard">
+                  <GuardDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute role="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </main>
       </div>
     </Router>
   )
