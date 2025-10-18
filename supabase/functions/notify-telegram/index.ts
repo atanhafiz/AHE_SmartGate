@@ -1,127 +1,105 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  // 🔧 Handle preflight CORS request
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    });
   }
 
-  // Allow public access - no JWT verification required
-  console.log('Public access request received')
-
   try {
-    const payload = await req.json()
-    console.log('📦 Received payload:', payload)
-    
-    // Get environment variables
-    const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')
-    const TELEGRAM_CHAT_ID = Deno.env.get('TELEGRAM_CHAT_ID')
-    
-    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-      console.error('Missing Telegram configuration')
-      return new Response(
-        JSON.stringify({ error: 'Telegram configuration missing' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    if (req.method !== "POST") {
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      });
     }
 
-    // Handle both old and new payload formats
-    const name = payload.name || payload.record?.users?.name || 'Unknown'
-    const houseNumber = payload.house_number || payload.record?.users?.house_number || 'N/A'
-    const entryType = payload.entry_type || payload.record?.entry_type || 'normal'
-    const timestamp = payload.timestamp || payload.record?.timestamp || new Date().toISOString()
-    const notes = payload.notes || payload.record?.notes || ''
-    const selfieUrl = payload.selfie_url || payload.record?.selfie_url
+    const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
+    const TELEGRAM_CHAT_ID = Deno.env.get("TELEGRAM_CHAT_ID");
 
-    // Format the message
-    const message = `🚪 *New Entry Detected*
-Name: ${name}
-House: ${houseNumber}
-Type: ${entryType === 'forced_by_guard' ? 'Forced Entry' : 'Normal Entry'}
-Time: ${new Date(timestamp).toLocaleString()}
-${notes ? `Notes: ${notes}` : ''}`
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+      console.error("❌ Missing Telegram credentials");
+      return new Response("Missing Telegram credentials", {
+        status: 500,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      });
+    }
 
-    // Send text message
-    console.log('Sending Telegram message...')
-    const textResponse = await fetch(
+    const body = await req.json();
+    const record = body?.record || body;
+
+    const name = record?.users?.name || record?.name || "Unknown Visitor";
+    const house = record?.users?.house_number || record?.house_number || "-";
+    const entryType = record?.entry_type || "normal";
+    const selfieUrl = record?.selfie_url || "";
+    const timestamp = record?.timestamp || new Date().toISOString();
+
+    const message = `
+🚪 *New Entry Detected*
+👤 *Name:* ${name}
+🏠 *House:* ${house}
+📋 *Type:* ${entryType}
+🕒 *Time:* ${timestamp}
+    `;
+
+    // Send Telegram text message
+    const sendText = await fetch(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
           text: message,
-          parse_mode: 'Markdown',
+          parse_mode: "Markdown",
         }),
       }
-    )
+    );
 
-    const textResult = await textResponse.json()
-    console.log('Telegram text response:', textResult)
-
-    if (!textResponse.ok) {
-      console.error('Failed to send text message:', textResult)
-    } else {
-      console.log('✅ Telegram message sent successfully')
+    if (!sendText.ok) {
+      console.error("⚠️ Telegram sendMessage failed:", await sendText.text());
     }
 
-    // Send photo if available
+    // Send photo if exists
     if (selfieUrl) {
-      console.log('Sending Telegram photo...')
-      try {
-        const formData = new FormData()
-        formData.append('chat_id', TELEGRAM_CHAT_ID)
-        formData.append('photo', selfieUrl)
-        formData.append('caption', `Entry photo for ${name}`)
-        
-        const photoResponse = await fetch(
-          `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,
-          {
-            method: 'POST',
-            body: formData,
-          }
-        )
-
-        const photoResult = await photoResponse.json()
-        console.log('Telegram photo response:', photoResult)
-
-        if (!photoResponse.ok) {
-          console.error('Failed to send photo:', photoResult)
-        } else {
-          console.log('✅ Telegram photo sent successfully')
+      const sendPhoto = await fetch(
+        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            photo: selfieUrl,
+          }),
         }
-      } catch (photoError) {
-        console.error('Error sending photo:', photoError)
-        // Continue execution even if photo fails
+      );
+      if (!sendPhoto.ok) {
+        console.error("⚠️ Telegram sendPhoto failed:", await sendPhoto.text());
       }
-    } else {
-      console.log('No photo URL provided, skipping photo send')
     }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
-
-  } catch (error) {
-    console.error('Error in notify-telegram function:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    console.log("✅ Telegram notification sent successfully");
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  } catch (err) {
+    console.error("🔥 Telegram Function Error:", err);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   }
-})
+});

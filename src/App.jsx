@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useSession } from './hooks/useSession'
 import RegisterPage from './pages/RegisterPage'
@@ -9,7 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import EntryForm from './components/EntryForm'
 
 function App() {
-  const { session, profile, loading } = useSession()
+  const { session, profile, loading, signOut } = useSession()
 
   // Show loading while checking authentication
   if (loading) {
@@ -47,6 +47,60 @@ function App() {
             },
           }}
         />
+        
+        {/* 🧭 Top Navigation Bar */}
+        <nav className="bg-sky-700 text-white py-3 shadow-md">
+          <div className="container mx-auto flex justify-between items-center px-4">
+            <div className="flex space-x-6 font-semibold">
+              <Link to="/" className="hover:text-yellow-300 transition-colors">
+                🏠 Visitor Check-In
+              </Link>
+              {session && (
+                <>
+                  <Link to="/guard" className="hover:text-yellow-300 transition-colors">
+                    🚨 Guard Dashboard
+                  </Link>
+                  <Link to="/admin" className="hover:text-yellow-300 transition-colors">
+                    📊 Admin Dashboard
+                  </Link>
+                </>
+              )}
+            </div>
+            
+            {/* User info and logout */}
+            <div className="flex items-center space-x-4">
+              {session ? (
+                <>
+                  <span className="text-sm">
+                    Welcome, {profile?.full_name || 'User'} ({profile?.role})
+                  </span>
+                  <button
+                    onClick={signOut}
+                    className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <div className="flex space-x-2">
+                  <Link 
+                    to="/login" 
+                    className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link 
+                    to="/register" 
+                    className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm transition-colors"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </nav>
+
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />

@@ -139,26 +139,42 @@ const EntryForm = () => {
     }))
   }
 
-  // Upload image to Supabase Storage
-  const uploadImage = async (file, fileName) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from('selfies')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
+  // Upload image to Supabase Storage with retry logic
+  const uploadImage = async (file) => {
+    const fileName = `${Date.now()}_${formData?.name || 'anonymous'}.jpg`
+    const maxRetries = 3
+    let attempt = 0
 
-      if (error) throw error
+    while (attempt < maxRetries) {
+      try {
+        attempt++
+        console.log(`📤 [Attempt ${attempt}] Uploading image: ${fileName}`)
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('selfies')
-        .getPublicUrl(fileName)
+        const { data, error } = await supabase.storage
+          .from("selfies")
+          .upload(fileName, file, {
+            cacheControl: "3600",
+            upsert: false,
+          })
 
-      return publicUrl
-    } catch (error) {
-      console.error('Upload error:', error)
-      throw new Error('Gagal memuat naik gambar')
+        if (error) throw error
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("selfies")
+          .getPublicUrl(fileName)
+
+        console.log("✅ Image uploaded successfully:", publicUrl)
+        return publicUrl
+      } catch (err) {
+        console.error(`❌ Upload attempt ${attempt} failed:`, err.message)
+        if (attempt < maxRetries) {
+          toast.error(`🚫 Upload gagal (percubaan ${attempt}). Cuba lagi...`)
+          await new Promise((resolve) => setTimeout(resolve, 2000)) // Retry delay
+        } else {
+          toast.error("❌ Gagal memuat naik gambar selepas beberapa percubaan.")
+          throw new Error("Gagal memuat naik gambar")
+        }
+      }
     }
   }
 
@@ -225,9 +241,8 @@ const EntryForm = () => {
       console.log('🚀 Starting EntryForm submission...')
 
       // Step 1: Upload selfie to Supabase Storage
-      const fileName = `${Date.now()}_${formData.name.replace(/\s+/g, '_')}.jpg`
-      console.log('📤 Uploading image:', fileName)
-      const selfieUrl = await uploadImage(selfie, fileName)
+      console.log('📤 Starting image upload...')
+      const selfieUrl = await uploadImage(selfie)
       if (!selfieUrl) {
         throw new Error("Gagal muat naik gambar")
       }
@@ -235,22 +250,32 @@ const EntryForm = () => {
 
       // Step 2: Save to Supabase database
       console.log('💾 Saving to database...')
+      
+      // Prepare insert payload matching exact schema
+      const insertPayload = {
+        entry_type: 'normal',
+        selfie_url: selfieUrl,
+        notes: `Visitor Check-In: ${formData.name} (${formData.house_number})`,
+        timestamp: new Date().toISOString(),
+      }
+      
+      console.log('📦 Insert payload:', insertPayload)
+      
       const { data: entryData, error: dbError } = await supabase
         .from('entries')
-        .insert({
-          entry_type: 'normal',
-          selfie_url: selfieUrl,
-          notes: `Visitor Check-In: ${formData.name} (${formData.house_number})`,
-          timestamp: new Date().toISOString(),
-        })
+        .insert(insertPayload)
         .select()
         .single()
 
       if (dbError) {
-        console.error('❌ Database error:', dbError)
+        console.error("❌ Supabase Insert Error Details:", dbError.message, dbError.details)
+        console.error("❌ Full error object:", dbError)
+        toast.error("Gagal menyimpan data pengguna. Lihat console untuk maklumat lanjut.")
         throw dbError
+      } else {
+        console.log("✅ Data inserted successfully to Supabase entries.")
+        console.log('✅ Database saved:', entryData)
       }
-      console.log('✅ Database saved:', entryData)
 
       // Step 3: Notify Telegram
       console.log('📱 Sending Telegram notification...')
@@ -280,7 +305,7 @@ const EntryForm = () => {
       }
 
       const telegramResult = await res.json()
-      console.log('✅ Telegram notification sent:', telegramResult)
+      console.log('📨 Telegram notification sent (200 OK):', telegramResult)
 
       // Show success message
       toast.success('✅ Data berjaya dihantar ke admin')

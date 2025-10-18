@@ -141,28 +141,42 @@ const GuardDashboard = () => {
     }
   }, [])
 
-  // Upload image to Supabase Storage
+  // Upload image to Supabase Storage with retry logic
   const uploadImage = async (file) => {
-    try {
-      const fileName = `guard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`
-      
-      const { data, error } = await supabase.storage
-        .from('selfies')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
+    const fileName = `guard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`
+    const maxRetries = 3
+    let attempt = 0
 
-      if (error) throw error
+    while (attempt < maxRetries) {
+      try {
+        attempt++
+        console.log(`📤 [Attempt ${attempt}] Uploading guard image: ${fileName}`)
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('selfies')
-        .getPublicUrl(fileName)
+        const { data, error } = await supabase.storage
+          .from("selfies")
+          .upload(fileName, file, {
+            cacheControl: "3600",
+            upsert: false,
+          })
 
-      return publicUrl
-    } catch (error) {
-      console.error('Upload error:', error)
-      throw new Error('Gagal memuat naik gambar')
+        if (error) throw error
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("selfies")
+          .getPublicUrl(fileName)
+
+        console.log("✅ Guard image uploaded successfully:", publicUrl)
+        return publicUrl
+      } catch (err) {
+        console.error(`❌ Guard upload attempt ${attempt} failed:`, err.message)
+        if (attempt < maxRetries) {
+          toast.error(`🚫 Upload gagal (percubaan ${attempt}). Cuba lagi...`)
+          await new Promise((resolve) => setTimeout(resolve, 2000)) // Retry delay
+        } else {
+          toast.error("❌ Gagal memuat naik gambar selepas beberapa percubaan.")
+          throw new Error("Gagal memuat naik gambar")
+        }
+      }
     }
   }
 
