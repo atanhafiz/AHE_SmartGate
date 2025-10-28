@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useSession } from '../hooks/useSession'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabaseClient'
 import toast from 'react-hot-toast'
 
 const LoginPage = () => {
@@ -8,7 +9,7 @@ const LoginPage = () => {
     password: ''
   })
   const [loading, setLoading] = useState(false)
-  const { signIn } = useSession()
+  const navigate = useNavigate()
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -19,23 +20,26 @@ const LoginPage = () => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-
+    e.preventDefault();
+    setLoading(true);
     try {
-      const { data, error } = await signIn(formData.email, formData.password)
-      
-      if (error) {
-        toast.error(error.message)
-      } else {
-        toast.success('Login successful!')
-        // Redirect will be handled by ProtectedRoute based on user role
-        window.location.href = '/'
-      }
-    } catch (error) {
-      toast.error('Login failed. Please try again.')
+      const { data, error } = await supabase.auth.signInWithPassword({ email: formData.email, password: formData.password });
+      if (error) throw error;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, full_name")
+        .eq("id", data.user.id)
+        .single();
+
+      toast.success(`Welcome, ${profile.full_name}!`);
+      if (profile.role === "admin") navigate("/admin");
+      else if (profile.role === "guard") navigate("/guard");
+      else navigate("/");
+    } catch (err) {
+      toast.error(err.message || "Invalid login credentials");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 

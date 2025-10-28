@@ -1,41 +1,39 @@
 import { Navigate } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
 import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 export default function ProtectedRoute({ children, role }) {
+  const [ready, setReady] = useState(false);
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function checkSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+    const load = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
 
-      if (session) {
-        const { data } = await supabase
+      if (data.session) {
+        const { data: p } = await supabase
           .from("profiles")
           .select("role")
-          .eq("id", session.user.id)
+          .eq("id", data.session.user.id)
           .single();
-        setProfile(data);
+        setProfile(p);
       }
-
-      setLoading(false);
-    }
-
-    checkSession();
+      setReady(true);
+    };
+    load();
   }, []);
 
-  if (loading) {
+  if (!ready)
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-600"></div>
       </div>
     );
-  }
 
   if (!session) return <Navigate to="/login" />;
   if (role && profile?.role !== role) return <Navigate to="/" />;
+
   return children;
 }
