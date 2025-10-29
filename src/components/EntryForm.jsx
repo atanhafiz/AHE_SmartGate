@@ -197,15 +197,22 @@ const EntryForm = () => {
     }
   };
 
-  // ✅ Confirmation Screen
-  if (submittedData) {
-    return (
-      <div className="bg-green-50 min-h-screen flex items-center justify-center p-6">
-        <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md text-center">
-          <div className="text-green-600 text-7xl mb-3">✅</div>
-          <h2 className="text-2xl font-extrabold text-gray-800 mb-3 uppercase">
-            PENDAFTARAN BERJAYA
-          </h2>
+// ✅ Confirmation Screen
+if (submittedData) {
+  return (
+    <div className="bg-green-50 min-h-screen flex items-center justify-center p-6">
+      <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md text-center">
+        {/* 🔹 Logo atas slip */}
+        <img
+          src="/favicon.ico"
+          alt="AHE SmartGate"
+          className="w-12 h-12 mx-auto mb-2 opacity-90"
+        />
+
+        <div className="text-green-600 text-7xl mb-3">✅</div>
+        <h2 className="text-2xl font-extrabold text-gray-800 mb-3 uppercase">
+          PENDAFTARAN BERJAYA
+        </h2>
           <img
             src={submittedData.selfie_url}
             alt="Selfie"
