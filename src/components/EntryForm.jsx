@@ -5,9 +5,11 @@ import toast from 'react-hot-toast'
 const EntryForm = () => {
   const [formData, setFormData] = useState({
     name: '',
-    house_number: ''
+    house_number: '',
+    phone_number: '',
+    plate_number: ''
   })
-  const [selfie, setSelfie] = useState(null)
+    const [selfie, setSelfie] = useState(null)
   const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [cameraActive, setCameraActive] = useState(false)
@@ -241,10 +243,12 @@ const EntryForm = () => {
       const insertPayload = {
         entry_type: 'normal',
         selfie_url: selfieUrl,
-        notes: `Visitor Check-In: ${formData.name} (${formData.house_number})`,
+        notes: `Visitor Check-In: ${formData.name} (${formData.house_number}) | Tel: ${formData.phone_number} | Plat: ${formData.plate_number}`,
         timestamp: new Date().toISOString(),
+        phone_number: formData.phone_number,
+        plate_number: formData.plate_number,
       }
-      
+            
       console.log('📦 Insert payload:', insertPayload)
       
       const { data: entryData, error: dbError } = await supabase
@@ -268,12 +272,13 @@ const EntryForm = () => {
       const telegramPayload = {
         name: formData.name,
         house_number: formData.house_number,
+        phone_number: formData.phone_number,
+        plate_number: formData.plate_number,
         entry_type: 'normal',
         timestamp: new Date().toISOString(),
         selfie_url: selfieUrl,
       }
-
-      const res = await fetch('https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram', {
+            const res = await fetch('https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -313,15 +318,15 @@ const EntryForm = () => {
   return (
     <div className="bg-sky-100 min-h-screen flex items-center justify-center p-4">
       <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md mx-auto">
-        <h1 className="text-xl font-bold text-center mb-6 text-gray-800">
-          Visitor Check-In
+      <h1 className="text-2xl font-extrabold text-center mb-6 bg-gradient-to-r from-sky-600 to-blue-500 bg-clip-text text-transparent drop-shadow-sm tracking-wide uppercase">
+        Visitor Check-In
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Name Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nama Penuh *
+              Nama *
             </label>
             <input
               type="text"
@@ -330,7 +335,7 @@ const EntryForm = () => {
               onChange={handleInputChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-              placeholder="Masukkan nama penuh"
+              placeholder="Masukkan nama anda"
             />
           </div>
 
@@ -346,9 +351,42 @@ const EntryForm = () => {
               onChange={handleInputChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-              placeholder="Contoh: 123, A-15, Blok B"
+              placeholder="Contoh: 1143"
             />
           </div>
+
+                      {/* Phone Number Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombor Telefon *
+              </label>
+              <input
+                type="tel"
+                name="phone_number"
+                value={formData.phone_number}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                placeholder="Contoh: 012-3456789"
+              />
+            </div>
+
+            {/* Plate Number Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombor Plat Kenderaan *
+              </label>
+              <input
+                type="text"
+                name="plate_number"
+                value={formData.plate_number}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                placeholder="Contoh: VAD 1234"
+              />
+            </div>
+
 
           {/* Camera Section */}
           <div>

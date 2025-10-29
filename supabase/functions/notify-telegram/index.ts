@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 serve(async (req) => {
-  // 🔧 Handle preflight CORS request
+  // ✅ Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
@@ -34,54 +34,60 @@ serve(async (req) => {
     const body = await req.json();
     const record = body?.record || body;
 
+    // Extract info dari payload
     const name = record?.users?.name || record?.name || "Unknown Visitor";
     const house = record?.users?.house_number || record?.house_number || "-";
+    const phone = record?.phone_number || "-";
+    const plate = record?.plate_number || "-";
     const entryType = record?.entry_type || "normal";
     const selfieUrl = record?.selfie_url || "";
-    const timestamp = record?.timestamp || new Date().toISOString();
+      // 🇲🇾 Format tarikh & masa dalam Bahasa Melayu
+      const date = new Date(record?.timestamp || new Date());
+      const hari = date.toLocaleDateString("ms-MY", { weekday: "long", timeZone: "Asia/Kuala_Lumpur" });
+      const tarikh = date.toLocaleDateString("ms-MY", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kuala_Lumpur",
+      });
+      const masa = date.toLocaleTimeString("ms-MY", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kuala_Lumpur",
+      });
+      const timestamp = `${hari}, ${tarikh} - ${masa}`;
 
-    const message = `
-🚪 *New Entry Detected*
-👤 *Name:* ${name}
-🏠 *House:* ${house}
-📋 *Type:* ${entryType}
-🕒 *Time:* ${timestamp}
-    `;
+    // Caption format (Markdown)
+    const caption = `
+        🚪 *Rekod Kemasukan Baharu Dikesan*
+      👤 *Nama:* ${name}
+      🏠 *No Rumah:* ${house}
+      📞 *Telefon:* ${phone}
+      🚗 *No Plat:* ${plate}
+      🧾 *Jenis:* ${entryType}
+      🕒 *Masa:* ${timestamp}
+      `;
 
-    // Send Telegram text message
-    const sendText = await fetch(
-      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+    // ✅ Send photo + caption together
+    const res = await fetch(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
-          text: message,
+          photo: selfieUrl || "https://via.placeholder.com/600x400?text=No+Photo",
+          caption,
           parse_mode: "Markdown",
         }),
       }
     );
 
-    if (!sendText.ok) {
-      console.error("⚠️ Telegram sendMessage failed:", await sendText.text());
-    }
-
-    // Send photo if exists
-    if (selfieUrl) {
-      const sendPhoto = await fetch(
-        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            photo: selfieUrl,
-          }),
-        }
-      );
-      if (!sendPhoto.ok) {
-        console.error("⚠️ Telegram sendPhoto failed:", await sendPhoto.text());
-      }
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("⚠️ Telegram sendPhoto failed:", errText);
+      throw new Error(errText);
     }
 
     console.log("✅ Telegram notification sent successfully");

@@ -1,91 +1,78 @@
+#!/bin/bash
 # ===============================================
 # 🧹 AHE SMARTGATE CLEANUP SCRIPT (FINAL STABLE v2)
-# PowerShell Version (Windows)
 # ===============================================
-Write-Host "🚀 Starting SmartGate cleanup..." -ForegroundColor Cyan
+# Objective: Cleanup old Cursor-generated junk, reorganize structure, and keep valid source code only.
+
+echo "🚀 Starting SmartGate cleanup..."
 
 # --- Create organized folders ---
-$folders = @(
-  "src/components/Admin",
-  "src/components/Guard",
-  "src/components/Shared",
-  "src/hooks",
-  "src/lib",
-  "src/pages",
-  "src/utils",
-  "src/styles",
-  "public/images",
-  "supabase/functions/notify-telegram"
-)
-foreach ($f in $folders) {
-  if (!(Test-Path $f)) { New-Item -ItemType Directory -Path $f | Out-Null }
-}
+mkdir -p src/components/Admin
+mkdir -p src/components/Guard
+mkdir -p src/components/Shared
+mkdir -p src/hooks
+mkdir -p src/lib
+mkdir -p src/pages
+mkdir -p src/utils
+mkdir -p src/styles
+mkdir -p public/images
+mkdir -p supabase/functions/notify-telegram
 
-# --- Move core files safely ---
-$moveMap = @{
-  "src\App.jsx" = "src\"
-  "src\main.jsx" = "src\"
-  "src\index.css" = "src\styles\"
-  "supabase-schema.sql" = "supabase\schema.sql"
-  "supabase-trigger.sql" = "supabase\trigger.sql"
-  "supabase-seed-data.sql" = "supabase\seed.sql"
-  "supabase-profiles-schema.sql" = "supabase\profiles-schema.sql"
-}
+# --- Move core app files ---
+mv src/App.jsx src/main.jsx src/index.css src/styles/ 2>/dev/null || true
+mv src/components/*.jsx src/components/Shared/ 2>/dev/null || true
+mv src/hooks/*.js src/hooks/ 2>/dev/null || true
+mv src/lib/supabaseClient.js src/lib/ 2>/dev/null || true
+mv src/pages/*.jsx src/pages/ 2>/dev/null || true
+mv src/utils/*.js src/utils/ 2>/dev/null || true
 
-foreach ($pair in $moveMap.GetEnumerator()) {
-  if (Test-Path $pair.Key) {
-    Move-Item -Path $pair.Key -Destination $pair.Value -Force
-  }
-}
+# --- Move Supabase SQL structure ---
+mv supabase-schema.sql supabase/schema.sql 2>/dev/null || true
+mv supabase-trigger.sql supabase/trigger.sql 2>/dev/null || true
+mv supabase-seed-data.sql supabase/seed.sql 2>/dev/null || true
+mv supabase-profiles-schema.sql supabase/profiles-schema.sql 2>/dev/null || true
 
-# --- Move batch of matching files safely ---
-$patterns = @(
-  "src\components\*.jsx",
-  "src\hooks\*.js",
-  "src\lib\supabaseClient.js",
-  "src\pages\*.jsx",
-  "src\utils\*.js"
-)
-foreach ($pattern in $patterns) {
-  Get-ChildItem -Path $pattern -ErrorAction SilentlyContinue | ForEach-Object {
-    Move-Item $_.FullName -Destination (Split-Path $pattern) -Force -ErrorAction SilentlyContinue
-  }
-}
+# --- Move Edge Function ---
+mv supabase/functions/notify-telegram/* supabase/functions/notify-telegram/ 2>/dev/null || true
 
-# --- Clean up junk Markdown and auto files ---
-Write-Host "🧽 Removing auto-generated logs and junk..." -ForegroundColor Yellow
-$junkPatterns = @(
-  "*_SUMMARY.md", "*_FIX.md", "*_REPORT.md", "*_GUIDE.md", "*_COMPLETE.md",
-  "AUTO_*", "SMARTGATE_*", "SUPABASE_*", "TELEGRAM_*", "UPLOAD_*",
-  "STABLE_*", "PIPELINE_*", "SESSION_*", "ROUTING_*", "FINAL_*",
-  "CORS_*", "ENHANCED_*", "DYNAMIC_*", "ENTRYFORM_*", "PERFECT_*", "SYSTEM_*"
-)
-foreach ($pattern in $junkPatterns) {
-  Get-ChildItem -Path . -Recurse -Include $pattern -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-}
+# --- Delete Cursor junk and auto-generated summary files ---
+echo "🧽 Removing auto-generated logs and junk..."
+find . -type f -name "*_SUMMARY.md" -delete
+find . -type f -name "*_FIX.md" -delete
+find . -type f -name "*_REPORT.md" -delete
+find . -type f -name "*_GUIDE.md" -delete
+find . -type f -name "*_COMPLETE.md" -delete
+find . -type f -name "AUTO_*" -delete
+find . -type f -name "SMARTGATE_*" -delete
+find . -type f -name "SUPABASE_*" -delete
+find . -type f -name "TELEGRAM_*" -delete
+find . -type f -name "UPLOAD_*" -delete
+find . -type f -name "STABLE_*" -delete
+find . -type f -name "PIPELINE_*" -delete
+find . -type f -name "SESSION_*" -delete
+find . -type f -name "ROUTING_*" -delete
+find . -type f -name "FINAL_*" -delete
+find . -type f -name "CORS_*" -delete
+find . -type f -name "ENHANCED_*" -delete
+find . -type f -name "DYNAMIC_*" -delete
+find . -type f -name "ENTRYFORM_*" -delete
+find . -type f -name "PERFECT_*" -delete
+find . -type f -name "SYSTEM_*" -delete
 
-# --- Delete test and deployment scripts ---
-Write-Host "🗑️  Removing test & deployment leftovers..." -ForegroundColor DarkYellow
-$deletePatterns = @(
-  "test*.js", "system-test.js", "verify-build.js",
-  "fix-netlify-404.js", "deploy-to-netlify.js",
-  "setup-env.js", "NETLIFY_DEPLOYMENT.md", "DEPLOYMENT.md",
-  "env.config.js", "env.example"
-)
-foreach ($pattern in $deletePatterns) {
-  Get-ChildItem -Path . -Recurse -Include $pattern -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-}
+# --- Delete test and old deployment scripts ---
+echo "🗑️  Removing test & deployment leftovers..."
+rm -f test*.js system-test.js verify-build.js fix-netlify-404.js deploy-to-netlify.js
+rm -f setup-env.js NETLIFY_DEPLOYMENT.md DEPLOYMENT.md env.config.js env.example
+rm -rf supabase/.temp 2>/dev/null || true
 
-if (Test-Path "supabase\.temp") { Remove-Item -Recurse -Force "supabase\.temp" }
-
-# --- Show new folder structure (3 levels deep) ---
-Write-Host "`n📂 Final folder structure (Top 3 levels):" -ForegroundColor Green
-Get-ChildItem -Depth 3 | ForEach-Object { $_.FullName }
+# --- Show cleaned structure (3 levels deep) ---
+echo "📂 Final folder structure:"
+tree -L 3 -I "node_modules|dist|.temp" || ls -R | head -n 100
 
 # --- Git Commit ---
-Write-Host "`n✅ Committing cleanup changes..." -ForegroundColor Cyan
+echo "✅ Committing cleanup changes..."
 git add .
 git commit -m "chore: cleanup and stabilize SmartGate structure"
 git push
 
-Write-Host "`n🎉 Cleanup complete! SmartGate structure is now clean and stable." -ForegroundColor Green
+echo "🎉 Cleanup complete! SmartGate structure is now clean and stable."
