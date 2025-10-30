@@ -141,10 +141,11 @@ const EntryForm = () => {
         return;
       }
 
-      const userType = formData.is_owner_unpaid
-        ? "resident_unpaid"
-        : "visitor";
-
+      let userType = "visitor"; // default
+      if (formData.is_owner_unpaid) userType = "resident_unpaid";
+      else if (formData.is_vendor) userType = "vendor";
+      else if (formData.is_other) userType = "other";
+      
       const selfieUrl = await uploadImage(selfie);
 
       const notesArr = [
