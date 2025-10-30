@@ -263,13 +263,13 @@ const EntryForm = () => {
           {/* Nama */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Nama *</label>
-            <input type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500" placeholder="Masukkan nama anda" required />
+            <input type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500" placeholder="Isikan nama anda" required />
           </div>
 
           {/* Rumah */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Nombor Rumah *</label>
-            <input type="text" name="house_number" value={formData.house_number} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500" placeholder="Contoh: 1143" required />
+            <input type="text" name="house_number" value={formData.house_number} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500" placeholder="Contoh: 1350" required />
           </div>
 
           {/* ✅ Checkbox */}
@@ -311,7 +311,7 @@ const EntryForm = () => {
           {/* Plat */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Nombor Plat Kenderaan *</label>
-            <input type="text" name="plate_number" value={formData.plate_number} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500" placeholder="Contoh: VAD 1234" required />
+            <input type="text" name="plate_number" value={formData.plate_number} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500" placeholder="Contoh: ABC 1234" required />
           </div>
 
           {/* Kamera */}
@@ -333,7 +333,7 @@ const EntryForm = () => {
                       <span>📷</span>
                       <span>Buka Kamera</span>
                     </button>
-                    <p className="text-xs text-gray-500 text-center">Benarkan akses kamera jika diminta</p>
+                    <p className="text-xs text-gray-500 text-center">Benarkan (Allow) akses kamera jika diminta</p>
                   </div>
                 )}
               </div>
@@ -368,8 +368,7 @@ const EntryForm = () => {
           </button>
 
           <div className="text-xs text-gray-500 text-center">
-            <p>• Pastikan wajah jelas dalam gambar</p>
-            <p>• Data dihantar ke admin melalui Telegram</p>
+            <p>• Pastikan wajah anda JELAS dalam gambar</p>
           </div>
         </form>
 

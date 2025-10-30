@@ -60,13 +60,18 @@ function AppContent() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-gradient-to-r from-sky-700 to-cyan-700 text-white/90 backdrop-blur">
-        <div className="max-w-6xl mx-auto flex justify-between items-center px-4 py-3 relative">
-          {/* ✅ Logo + Nama auto-center kat mobile */}
-          <div className="absolute left-1/2 -translate-x-1/2 sm:static sm:translate-x-0 flex items-center gap-2 font-extrabold tracking-wide">
-            <img src="/favicon.ico" alt="AHE SmartGate" className="w-7 h-7 rounded" />
-            <span className="text-white text-base sm:text-lg">AHE SmartGate</span>
-          </div>
+        <nav className="sticky top-0 z-50 bg-gradient-to-r from-sky-700 to-cyan-700 text-white/90 backdrop-blur">
+          <div className="max-w-6xl mx-auto flex justify-between items-center px-4 py-2">
+            
+            {/* ✅ Logo kiri + nama sistem align kiri */}
+            <div className="flex items-center gap-2 font-extrabold tracking-wide">
+              <img 
+                src="/favicon.ico" 
+                alt="AHE SmartGate" 
+                className="w-8 h-8 rounded object-contain"
+              />
+              <span className="text-white text-base sm:text-lg">AHE SmartGate</span>
+            </div>
 
           {/* ✅ Menu kanan desktop */}
           <div className="hidden sm:flex items-center gap-2 ml-auto">
