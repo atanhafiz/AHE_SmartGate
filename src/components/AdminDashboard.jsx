@@ -97,9 +97,17 @@ const AdminDashboard = () => {
         residents: entries.filter(e =>
           ['resident_unpaid', 'resident_paid', 'resident'].includes(e.user_type)
         ).length,
+        vendors: entries.filter(e =>
+          e.notes?.toLowerCase().includes('vendor') ||
+          e.category?.toLowerCase().includes('vendor')
+        ).length,
+        others: entries.filter(e =>
+          e.notes?.toLowerCase().includes('lain-lain') ||
+          e.category?.toLowerCase().includes('lain-lain')
+        ).length,
         forcedEntries: entries.filter(e => e.entry_type === 'forced_by_guard').length,
-      })
-            setResetInfo({
+      });
+                  setResetInfo({
         today: formatMY(todayReset),
         week: formatMY(startOfWeek),
         month: formatMY(startOfMonth),
@@ -202,6 +210,20 @@ const AdminDashboard = () => {
           <div className="text-3xl font-bold text-purple-600 mb-1">{stats.residents}</div>
           <div className="text-gray-600">Residents</div>
         </div>
+
+          {/* Vendors */}
+          <div className="card text-center">
+            <div className="text-4xl mb-1">📦</div>
+            <div className="text-3xl font-bold text-amber-600 mb-1">{stats.vendors}</div>
+            <div className="text-gray-600">Vendors</div>
+          </div>
+
+          {/* Lain-lain */}
+          <div className="card text-center">
+            <div className="text-4xl mb-1">🧾</div>
+            <div className="text-3xl font-bold text-cyan-600 mb-1">{stats.others}</div>
+            <div className="text-gray-600">Lain-lain Urusan</div>
+          </div>
 
         {/* Forced */}
         <div className="card text-center">
