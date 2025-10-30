@@ -21,11 +21,14 @@ const ForcedEntryModal = ({ isOpen, onClose }) => {
         "https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`,
+          },
           body: JSON.stringify(payload),
         }
       );
-
+      
       if (!res.ok) {
         const errText = await res.text();
         throw new Error("Telegram send failed: " + errText);
