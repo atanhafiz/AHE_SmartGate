@@ -93,11 +93,13 @@ const AdminDashboard = () => {
         monthEntries: monthEntries.length,
         lastWeekEntries: lastWeekEntries.length,
         lastMonthEntries: lastMonthEntries.length,
-        visitors: entries.filter(e => e.users?.user_type === 'visitor').length,
-        residents: entries.filter(e => e.users?.user_type === 'resident_unpaid').length,
+        visitors: entries.filter(e => e.user_type === 'visitor').length,
+        residents: entries.filter(e =>
+          ['resident_unpaid', 'resident_paid', 'resident'].includes(e.user_type)
+        ).length,
         forcedEntries: entries.filter(e => e.entry_type === 'forced_by_guard').length,
       })
-      setResetInfo({
+            setResetInfo({
         today: formatMY(todayReset),
         week: formatMY(startOfWeek),
         month: formatMY(startOfMonth),
