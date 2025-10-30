@@ -8,6 +8,7 @@ const EntryForm = () => {
     house_number: "",
     phone_number: "",
     plate_number: "",
+    is_owner_unpaid: false, // ✅ Tambah field baru
   });
   const [selfie, setSelfie] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -20,26 +21,19 @@ const EntryForm = () => {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
 
-  // ✅ Start camera (front-facing)
+  // ✅ Start camera
   const startCamera = async () => {
     try {
       setCameraActive(true);
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "user" },
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-        },
+        video: { facingMode: { ideal: "user" }, width: { ideal: 640 }, height: { ideal: 480 } },
         audio: false,
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
-        try {
-          await videoRef.current.play();
-        } catch {
-          console.log("Auto-play prevented, user interaction required");
-        }
+        try { await videoRef.current.play(); } 
+        catch { console.log("Auto-play prevented, user interaction required"); }
         setCaptured(false);
       }
     } catch (error) {
@@ -88,14 +82,15 @@ const EntryForm = () => {
   };
 
   useEffect(() => {
-    return () => {
-      stopCamera();
-    };
+    return () => stopCamera();
   }, []);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   // ✅ Upload selfie ke Supabase
@@ -140,6 +135,9 @@ const EntryForm = () => {
         return;
       }
 
+      // ✅ Tentukan user_type berdasarkan tickbox
+      const userType = formData.is_owner_unpaid ? "resident_unpaid" : "visitor";
+
       const selfieUrl = await uploadImage(selfie);
       const insertPayload = {
         entry_type: "normal",
@@ -148,18 +146,18 @@ const EntryForm = () => {
         timestamp: new Date().toISOString(),
         phone_number: formData.phone_number,
         plate_number: formData.plate_number,
+        user_type: userType,
       };
       await supabase.from("entries").insert(insertPayload);
 
       const telegramPayload = {
         ...formData,
         selfie_url: selfieUrl,
-        entry_type: "normal",
+        entry_type: userType === "resident_unpaid" ? "resident_unpaid" : "normal",
         timestamp: new Date().toISOString(),
       };
       await notifyTelegram(telegramPayload);
 
-      // ✅ Simpan data untuk slip
       const timestampMY = new Date().toLocaleString("ms-MY", {
         timeZone: "Asia/Kuala_Lumpur",
         weekday: "long",
@@ -177,12 +175,12 @@ const EntryForm = () => {
         timestamp: timestampMY,
       });
 
-      // Kosongkan form
       setFormData({
         name: "",
         house_number: "",
         phone_number: "",
         plate_number: "",
+        is_owner_unpaid: false,
       });
       setSelfie(null);
       setPreview(null);
@@ -197,47 +195,26 @@ const EntryForm = () => {
     }
   };
 
-// ✅ Confirmation Screen
-if (submittedData) {
-  return (
-    <div className="bg-green-50 min-h-screen flex items-center justify-center p-6">
-      <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md text-center">
-        {/* 🔹 Logo atas slip */}
-        <img
-          src="/favicon.ico"
-          alt="AHE SmartGate"
-          className="w-12 h-12 mx-auto mb-2 opacity-90"
-        />
-
-        <div className="text-green-600 text-7xl mb-3">✅</div>
-        <h2 className="text-2xl font-extrabold text-gray-800 mb-3 uppercase">
-          PENDAFTARAN BERJAYA
-        </h2>
-          <img
-            src={submittedData.selfie_url}
-            alt="Selfie"
-            className="w-40 h-40 object-cover rounded-lg mx-auto mb-4 border-2 border-green-500 shadow"
-          />
+  // ✅ Confirmation Screen
+  if (submittedData) {
+    return (
+      <div className="bg-green-50 min-h-screen flex items-center justify-center p-6">
+        <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md text-center">
+          <img src="/favicon.ico" alt="AHE SmartGate" className="w-12 h-12 mx-auto mb-2 opacity-90" />
+          <div className="text-green-600 text-7xl mb-3">✅</div>
+          <h2 className="text-2xl font-extrabold text-gray-800 mb-3 uppercase">
+            PENDAFTARAN BERJAYA
+          </h2>
+          <img src={submittedData.selfie_url} alt="Selfie" className="w-40 h-40 object-cover rounded-lg mx-auto mb-4 border-2 border-green-500 shadow" />
           <div className="text-left text-sm space-y-1">
-            <p>
-              <strong>👤 Nama:</strong> {submittedData.name}
-            </p>
-            <p>
-              <strong>🏠 Rumah:</strong> {submittedData.house_number}
-            </p>
-            <p>
-              <strong>📞 Telefon:</strong> {submittedData.phone_number}
-            </p>
-            <p>
-              <strong>🚗 Plat:</strong> {submittedData.plate_number}
-            </p>
-            <p>
-              <strong>🕒 Masa:</strong> {submittedData.timestamp}
-            </p>
+            <p><strong>👤 Nama:</strong> {submittedData.name}</p>
+            <p><strong>🏠 Rumah:</strong> {submittedData.house_number}</p>
+            <p><strong>📞 Telefon:</strong> {submittedData.phone_number}</p>
+            <p><strong>🚗 Plat:</strong> {submittedData.plate_number}</p>
+            <p><strong>🕒 Masa:</strong> {submittedData.timestamp}</p>
           </div>
           <div className="mt-6 text-xs text-gray-500">
-            Tunjukkan skrin ini kepada pengawal keselamatan sebagai bukti
-            pendaftaran.
+            Tunjukkan skrin ini kepada pengawal keselamatan sebagai bukti pendaftaran.
           </div>
         </div>
       </div>
@@ -253,138 +230,76 @@ if (submittedData) {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Name */}
+          {/* Nama */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nama *
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500"
-              placeholder="Masukkan nama anda"
-              required
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nama *</label>
+            <input type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500" placeholder="Masukkan nama anda" required />
           </div>
 
-          {/* House */}
+          {/* Rumah */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombor Rumah *
-            </label>
-            <input
-              type="text"
-              name="house_number"
-              value={formData.house_number}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500"
-              placeholder="Contoh: 1143"
-              required
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nombor Rumah *</label>
+            <input type="text" name="house_number" value={formData.house_number} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500" placeholder="Contoh: 1143" required />
           </div>
 
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombor Telefon *
+          {/* ✅ Checkbox Pemilik Rumah */}
+          <div className="mt-2">
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                name="is_owner_unpaid"
+                checked={formData.is_owner_unpaid}
+                onChange={handleInputChange}
+                className="w-4 h-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+              />
+              <span>Pemilik rumah <span className="text-gray-500">(tandakan untuk kemudahan pengesahan akses)</span></span>
             </label>
-            <input
-              type="tel"
-              name="phone_number"
-              value={formData.phone_number}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500"
-              placeholder="Contoh: 012-3456789"
-              required
-            />
           </div>
 
-          {/* Plate */}
+          {/* Telefon */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombor Plat Kenderaan *
-            </label>
-            <input
-              type="text"
-              name="plate_number"
-              value={formData.plate_number}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500"
-              placeholder="Contoh: VAD 1234"
-              required
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nombor Telefon *</label>
+            <input type="tel" name="phone_number" value={formData.phone_number} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500" placeholder="Contoh: 012-3456789" required />
           </div>
 
-          {/* Camera */}
+          {/* Plat */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ambil Selfie *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nombor Plat Kenderaan *</label>
+            <input type="text" name="plate_number" value={formData.plate_number} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500" placeholder="Contoh: VAD 1234" required />
+          </div>
+
+          {/* Kamera */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Ambil Selfie *</label>
             {!captured ? (
               <div className="space-y-4">
                 {cameraActive ? (
                   <div className="relative">
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
-                    />
+                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-64 object-cover rounded-lg border-2 border-gray-200" />
                     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                      <button
-                        type="button"
-                        onClick={capturePhoto}
-                        className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full w-12 h-12 flex items-center justify-center"
-                      >
-                        📸
-                      </button>
-                      <button
-                        type="button"
-                        onClick={stopCamera}
-                        className="bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-full w-12 h-12 flex items-center justify-center"
-                      >
-                        ❌
-                      </button>
+                      <button type="button" onClick={capturePhoto} className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full w-12 h-12 flex items-center justify-center">📸</button>
+                      <button type="button" onClick={stopCamera} className="bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-full w-12 h-12 flex items-center justify-center">❌</button>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <button
-                      type="button"
-                      onClick={startCamera}
-                      className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg py-3 flex justify-center space-x-2"
-                    >
+                    <button type="button" onClick={startCamera} className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg py-3 flex justify-center space-x-2">
                       <span>📷</span>
                       <span>Buka Kamera</span>
                     </button>
-                    <p className="text-xs text-gray-500 text-center">
-                      Benarkan akses kamera jika diminta
-                    </p>
+                    <p className="text-xs text-gray-500 text-center">Benarkan akses kamera jika diminta</p>
                   </div>
                 )}
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="relative">
-                  <img
-                    src={preview}
-                    alt="Captured selfie"
-                    className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
-                  />
+                  <img src={preview} alt="Captured selfie" className="w-full h-64 object-cover rounded-lg border-2 border-gray-200" />
                   <div className="absolute top-2 right-2">
-                    <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                      ✓ Diambil
-                    </span>
+                    <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">✓ Diambil</span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={retakePhoto}
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg py-2"
-                >
+                <button type="button" onClick={retakePhoto} className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg py-2">
                   🔄 Ambil Semula
                 </button>
               </div>
@@ -392,11 +307,7 @@ if (submittedData) {
           </div>
 
           {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading || !captured}
-            className="w-full bg-sky-600 hover:bg-sky-700 disabled:bg-gray-400 text-white font-semibold rounded-lg py-3 flex justify-center space-x-2"
-          >
+          <button type="submit" disabled={loading || !captured} className="w-full bg-sky-600 hover:bg-sky-700 disabled:bg-gray-400 text-white font-semibold rounded-lg py-3 flex justify-center space-x-2">
             {loading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -415,7 +326,6 @@ if (submittedData) {
             <p>• Data dihantar ke admin melalui Telegram</p>
           </div>
         </form>
-
         <canvas ref={canvasRef} className="hidden" />
       </div>
     </div>
