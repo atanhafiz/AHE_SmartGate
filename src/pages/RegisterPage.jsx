@@ -170,14 +170,6 @@ const RegisterPage = () => {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <a
-              href="/login"
-              className="text-primary-600 hover:text-primary-500 text-sm font-medium"
-            >
-              ← Back to Login
-            </a>
-          </div>
         </div>
       </div>
     </div>
