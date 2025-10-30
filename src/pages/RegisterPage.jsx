@@ -169,7 +169,6 @@ const RegisterPage = () => {
               {loading ? 'Creating User...' : 'Create User'}
             </button>
           </form>
-
         </div>
       </div>
     </div>
