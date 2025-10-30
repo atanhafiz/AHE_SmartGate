@@ -148,14 +148,14 @@ const ForcedEntryModal = ({ isOpen, onClose }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Photo Evidence *
             </label>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handlePhotoChange}
-              required
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-            />
+             <input
+                  id="camera-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  required={required}
+                  className="hidden"
+                />
             {preview && (
               <div className="mt-2">
                 <img
