@@ -14,38 +14,31 @@ const ForcedEntryModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const { addUser, addEntry } = useEntries();
 
-// ✅ Telegram Notifier (debug version)
-const notifyTelegram = async (payload) => {
-  try {
-    console.log("📨 Sending payload to Telegram:", payload);
+  // ✅ Telegram Notifier – public call (no env key)
+  const notifyTelegram = async (payload) => {
+    try {
+      const res = await fetch(
+        "https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
-    const res = await fetch("https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // ❌ Komen dulu Authorization — ada projek yang reject bearer key di Edge Function
-        // Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    console.log("📡 Response status:", res.status);
-    const text = await res.text();
-    console.log("📦 Response body:", text);
-
-    if (!res.ok) throw new Error("Telegram send failed: " + res.status);
-  } catch (err) {
-    console.error("❌ Telegram Error:", err);
-    toast.error("Telegram error: " + err.message);
-  }
-};
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error("Telegram send failed: " + errText);
+      }
+    } catch (err) {
+      console.error("❌ Telegram Error:", err);
+      toast.error("Telegram error: " + err.message);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePhotoChange = (e) => {
@@ -63,7 +56,7 @@ const notifyTelegram = async (payload) => {
     setLoading(true);
 
     try {
-      // Upload photo if provided
+      // Upload photo
       let photoUrl = null;
       if (photo) {
         const { url, error } = await uploadImage(photo, "forced-entries");
@@ -74,23 +67,21 @@ const notifyTelegram = async (payload) => {
       // Create user first
       const { data: userData, error: userError } = await addUser({
         name: formData.name,
-        user_type: "visitor", // Forced entries are typically visitors
+        user_type: "visitor",
         house_number: formData.house_number || null,
       });
-
       if (userError) throw new Error(`Failed to create user: ${userError}`);
 
       // Create forced entry
-      const { data: entryData, error: entryError } = await addEntry({
+      const { error: entryError } = await addEntry({
         user_id: userData[0].id,
         entry_type: "forced_by_guard",
         selfie_url: photoUrl,
         notes: formData.notes || null,
       });
-
       if (entryError) throw new Error(`Failed to create entry: ${entryError}`);
 
-      // ✅ Send to Telegram
+      // ✅ Notify Telegram
       await notifyTelegram({
         name: formData.name,
         house_number: formData.house_number,
@@ -101,13 +92,7 @@ const notifyTelegram = async (payload) => {
       });
 
       toast.success("Forced entry recorded successfully!");
-
-      // Reset form and close modal
-      setFormData({
-        name: "",
-        house_number: "",
-        notes: "",
-      });
+      setFormData({ name: "", house_number: "", notes: "" });
       setPhoto(null);
       setPreview(null);
       onClose();
@@ -120,11 +105,7 @@ const notifyTelegram = async (payload) => {
   };
 
   const handleClose = () => {
-    setFormData({
-      name: "",
-      house_number: "",
-      notes: "",
-    });
+    setFormData({ name: "", house_number: "", notes: "" });
     setPhoto(null);
     setPreview(null);
     onClose();
@@ -139,16 +120,8 @@ const notifyTelegram = async (payload) => {
           <h3 className="text-lg font-semibold text-gray-800">
             Forced Entry Report
           </h3>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -160,7 +133,6 @@ const notifyTelegram = async (payload) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Person's Name *
@@ -176,7 +148,6 @@ const notifyTelegram = async (payload) => {
             />
           </div>
 
-          {/* House Number */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               House Number
@@ -191,7 +162,6 @@ const notifyTelegram = async (payload) => {
             />
           </div>
 
-          {/* Photo Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Photo Evidence *
@@ -214,7 +184,6 @@ const notifyTelegram = async (payload) => {
             )}
           </div>
 
-          {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Incident Details *
@@ -230,7 +199,6 @@ const notifyTelegram = async (payload) => {
             />
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
