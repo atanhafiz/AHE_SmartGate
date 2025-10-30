@@ -14,20 +14,31 @@ const ForcedEntryModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const { addUser, addEntry } = useEntries();
 
-  // ✅ Telegram Notifier
-  const notifyTelegram = async (payload) => {
-    const url =
-      "https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram";
-    const res = await fetch(url, {
+// ✅ Telegram Notifier (debug version)
+const notifyTelegram = async (payload) => {
+  try {
+    console.log("📨 Sending payload to Telegram:", payload);
+
+    const res = await fetch("https://kpukhpavdxidnoexfljv.supabase.co/functions/v1/notify-telegram", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`,
+        // ❌ Komen dulu Authorization — ada projek yang reject bearer key di Edge Function
+        // Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`,
       },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error("Telegram send failed");
-  };
+
+    console.log("📡 Response status:", res.status);
+    const text = await res.text();
+    console.log("📦 Response body:", text);
+
+    if (!res.ok) throw new Error("Telegram send failed: " + res.status);
+  } catch (err) {
+    console.error("❌ Telegram Error:", err);
+    toast.error("Telegram error: " + err.message);
+  }
+};
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
