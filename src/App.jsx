@@ -30,6 +30,19 @@ function AppContent() {
     loadProfile();
   }, [session]);
 
+  // ✅ Tambah effect untuk redirect bila role siap dimuat
+  useEffect(() => {
+    if (loading) return;           // tunggu semua load siap
+    if (!session) return;          // belum login, jangan redirect
+    if (!profile?.role) return;    // role belum wujud, tunggu dulu
+
+    if (profile.role === "admin") {
+      navigate("/admin", { replace: true });
+    } else if (profile.role === "guard") {
+      navigate("/guard", { replace: true });
+    }
+  }, [loading, session, profile, navigate]);
+
   const logout = async () => {
     await supabase.auth.signOut();
     navigate("/");
@@ -48,20 +61,16 @@ function AppContent() {
 
   return (
     <>
-      {/* 🔹 Navbar */}
       <nav className="sticky top-0 z-50 bg-gradient-to-r from-sky-700 to-cyan-700 text-white/90 backdrop-blur">
         <div className="max-w-6xl mx-auto flex justify-between items-center px-4 py-3">
-          {/* Logo */}
           <div className="flex items-center gap-2 font-extrabold tracking-wide">
             <img src="/favicon.ico" alt="AHE SmartGate" className="w-7 h-7 rounded" />
             <span className="hidden sm:inline">AHE SmartGate</span>
           </div>
 
-          {/* Main Links (Desktop) */}
           <div className="hidden sm:flex items-center gap-2">
             <NavLink to="/" className={linkClass}>🏠 Visitor Check-In</NavLink>
 
-            {/* Guard & Admin Links — hidden from visitor eyes on small screen */}
             {session && (
               <>
                 <NavLink to="/guard" className={linkClass}>🛡️ Guard Dashboard</NavLink>
@@ -69,7 +78,6 @@ function AppContent() {
               </>
             )}
 
-            {/* Logout section */}
             {session && (
               <div className="flex items-center gap-2 pl-2 ml-2 border-l border-white/20">
                 <span className="text-xs md:text-sm font-semibold">
@@ -85,7 +93,6 @@ function AppContent() {
             )}
           </div>
 
-          {/* 🔸 Hamburger Button (Mobile) */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="sm:hidden flex items-center px-3 py-2 border rounded text-white border-white/30 hover:bg-sky-600"
@@ -94,67 +101,52 @@ function AppContent() {
           </button>
         </div>
 
-        {/* 🔸 Dropdown Menu (Mobile Only) */}
         {menuOpen && (
-  <div
-    className="absolute right-4 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 
-               animate-fadeIn"
-  >
-    <ul className="py-2 text-gray-700 text-sm divide-y divide-gray-200">
-      <li>
-        <button
-          onClick={() => {
-            setMenuOpen(false);
-            navigate("/");
-          }}
-          className="block w-full text-left px-4 py-2 hover:bg-sky-100 transition-colors duration-150"
-        >
-          Visitor
-        </button>
-      </li>
-      <li>
-        <button
-          onClick={() => {
-            setMenuOpen(false);
-            navigate("/guard");
-          }}
-          className="block w-full text-left px-4 py-2 hover:bg-sky-100 transition-colors duration-150"
-        >
-          Guard
-        </button>
-      </li>
-      <li>
-        <button
-          onClick={() => {
-            setMenuOpen(false);
-            navigate("/admin");
-          }}
-          className="block w-full text-left px-4 py-2 hover:bg-sky-100 transition-colors duration-150"
-        >
-          Admin
-        </button>
-      </li>
-      {session && (
-        <li>
-          <button
-            onClick={() => {
-              setMenuOpen(false);
-              logout();
-            }}
-            className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100 transition-colors duration-150"
+          <div
+            className="absolute right-4 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 animate-fadeIn"
           >
-            Logout
-          </button>
-        </li>
-      )}
-    </ul>
-  </div>
-)}
+            <ul className="py-2 text-gray-700 text-sm divide-y divide-gray-200">
+              <li>
+                <button
+                  onClick={() => { setMenuOpen(false); navigate("/"); }}
+                  className="block w-full text-left px-4 py-2 hover:bg-sky-100 transition-colors duration-150"
+                >
+                  Visitor
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => { setMenuOpen(false); navigate("/guard"); }}
+                  className="block w-full text-left px-4 py-2 hover:bg-sky-100 transition-colors duration-150"
+                >
+                  Guard
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => { setMenuOpen(false); navigate("/admin"); }}
+                  className="block w-full text-left px-4 py-2 hover:bg-sky-100 transition-colors duration-150"
+                >
+                  Admin
+                </button>
+              </li>
+              {session && (
+                <li>
+                  <button
+                    onClick={() => { setMenuOpen(false); logout(); }}
+                    className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100 transition-colors duration-150"
+                  >
+                    Logout
+                  </button>
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
 
         <div className="h-[1px] w-full bg-white/15 shadow-inner" />
       </nav>
 
-      {/* 🔹 Routes */}
       <Routes>
         <Route path="/" element={<EntryForm />} />
         <Route path="/login" element={<LoginPage />} />
