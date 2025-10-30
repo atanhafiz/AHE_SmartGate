@@ -96,31 +96,29 @@ function AppContent() {
 
         {/* 🔸 Dropdown Menu (Mobile Only) */}
         {menuOpen && (
-          <div className="sm:hidden bg-sky-800/95 px-4 pb-3 space-y-2">
-            <NavLink to="/" onClick={() => setMenuOpen(false)} className={linkClass}>
-              🏠 Visitor Check-In
-            </NavLink>
-            {session && (
-              <>
-                <NavLink to="/guard" onClick={() => setMenuOpen(false)} className={linkClass}>
-                  🛡️ Guard Dashboard
-                </NavLink>
-                <NavLink to="/admin" onClick={() => setMenuOpen(false)} className={linkClass}>
-                  📊 Admin Dashboard
-                </NavLink>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    logout();
-                  }}
-                  className="w-full text-left text-sm font-semibold bg-red-500 hover:bg-red-600 px-3 py-1 rounded shadow-sm"
-                >
-                  Logout
-                </button>
-              </>
-            )}
-          </div>
-        )}
+  <div className="sm:hidden bg-sky-800/95 px-4 pb-3 space-y-2">
+    <NavLink to="/" onClick={() => setMenuOpen(false)} className={linkClass}>
+      🏠 Visitor Check-In
+    </NavLink>
+    <NavLink to="/guard" onClick={() => setMenuOpen(false)} className={linkClass}>
+      🛡️ Guard Dashboard
+    </NavLink>
+    <NavLink to="/admin" onClick={() => setMenuOpen(false)} className={linkClass}>
+      📊 Admin Dashboard
+    </NavLink>
+    {session && (
+      <button
+        onClick={() => {
+          setMenuOpen(false);
+          logout();
+        }}
+        className="w-full text-left text-sm font-semibold bg-red-500 hover:bg-red-600 px-3 py-1 rounded shadow-sm"
+      >
+        Logout
+      </button>
+    )}
+  </div>
+)}
 
         <div className="h-[1px] w-full bg-white/15 shadow-inner" />
       </nav>
