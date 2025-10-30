@@ -30,11 +30,10 @@ function AppContent() {
     loadProfile();
   }, [session]);
 
-  // ✅ Tambah effect untuk redirect bila role siap dimuat
   useEffect(() => {
-    if (loading) return;           // tunggu semua load siap
-    if (!session) return;          // belum login, jangan redirect
-    if (!profile?.role) return;    // role belum wujud, tunggu dulu
+    if (loading) return;
+    if (!session) return;
+    if (!profile?.role) return;
 
     if (profile.role === "admin") {
       navigate("/admin", { replace: true });
@@ -62,13 +61,15 @@ function AppContent() {
   return (
     <>
       <nav className="sticky top-0 z-50 bg-gradient-to-r from-sky-700 to-cyan-700 text-white/90 backdrop-blur">
-        <div className="max-w-6xl mx-auto flex justify-between items-center px-4 py-3">
-          <div className="flex items-center gap-2 font-extrabold tracking-wide">
+        <div className="max-w-6xl mx-auto flex justify-between items-center px-4 py-3 relative">
+          {/* ✅ Logo + Nama auto-center kat mobile */}
+          <div className="absolute left-1/2 -translate-x-1/2 sm:static sm:translate-x-0 flex items-center gap-2 font-extrabold tracking-wide">
             <img src="/favicon.ico" alt="AHE SmartGate" className="w-7 h-7 rounded" />
-            <span className="hidden sm:inline">AHE SmartGate</span>
+            <span className="text-white text-base sm:text-lg">AHE SmartGate</span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2">
+          {/* ✅ Menu kanan desktop */}
+          <div className="hidden sm:flex items-center gap-2 ml-auto">
             <NavLink to="/" className={linkClass}>🏠 Visitor Check-In</NavLink>
 
             {session && (
@@ -93,18 +94,17 @@ function AppContent() {
             )}
           </div>
 
+          {/* ✅ Hamburger menu kanan utk mobile */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="sm:hidden flex items-center px-3 py-2 border rounded text-white border-white/30 hover:bg-sky-600"
+            className="sm:hidden flex items-center px-3 py-2 border rounded text-white border-white/30 hover:bg-sky-600 ml-auto"
           >
             ☰
           </button>
         </div>
 
         {menuOpen && (
-          <div
-            className="absolute right-4 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 animate-fadeIn"
-          >
+          <div className="absolute right-4 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 animate-fadeIn">
             <ul className="py-2 text-gray-700 text-sm divide-y divide-gray-200">
               <li>
                 <button
