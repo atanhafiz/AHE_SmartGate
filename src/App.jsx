@@ -96,27 +96,55 @@ function AppContent() {
 
         {/* 🔸 Dropdown Menu (Mobile Only) */}
         {menuOpen && (
-  <div className="sm:hidden bg-sky-800/95 px-4 pb-3 space-y-2">
-    <NavLink to="/" onClick={() => setMenuOpen(false)} className={linkClass}>
-      🏠 Visitor Check-In
-    </NavLink>
-    <NavLink to="/guard" onClick={() => setMenuOpen(false)} className={linkClass}>
-      🛡️ Guard Dashboard
-    </NavLink>
-    <NavLink to="/admin" onClick={() => setMenuOpen(false)} className={linkClass}>
-      📊 Admin Dashboard
-    </NavLink>
-    {session && (
-      <button
-        onClick={() => {
-          setMenuOpen(false);
-          logout();
-        }}
-        className="w-full text-left text-sm font-semibold bg-red-500 hover:bg-red-600 px-3 py-1 rounded shadow-sm"
-      >
-        Logout
-      </button>
-    )}
+  <div className="absolute right-4 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+    <ul className="py-2 text-gray-700 text-sm">
+      <li>
+        <button
+          onClick={() => {
+            setMenuOpen(false);
+            navigate("/");
+          }}
+          className="block w-full text-left px-4 py-2 hover:bg-sky-100"
+        >
+          🏠 Visitor Check-In
+        </button>
+      </li>
+      <li>
+        <button
+          onClick={() => {
+            setMenuOpen(false);
+            navigate("/guard");
+          }}
+          className="block w-full text-left px-4 py-2 hover:bg-sky-100"
+        >
+          🛡️ Guard Dashboard
+        </button>
+      </li>
+      <li>
+        <button
+          onClick={() => {
+            setMenuOpen(false);
+            navigate("/admin");
+          }}
+          className="block w-full text-left px-4 py-2 hover:bg-sky-100"
+        >
+          📊 Admin Dashboard
+        </button>
+      </li>
+      {session && (
+        <li>
+          <button
+            onClick={() => {
+              setMenuOpen(false);
+              logout();
+            }}
+            className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
+          >
+            🚪 Logout
+          </button>
+        </li>
+      )}
+    </ul>
   </div>
 )}
 
