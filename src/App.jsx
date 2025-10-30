@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabaseClient";
 import { AuthProvider, useAuth } from "./context/AuthProvider";
 import EntryForm from "./components/EntryForm";
-import GuardDashboard from "./pages/GuardDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboard from "./components/AdminDashboard";
+import GuardDashboard from "./components/GuardDashboard";
 import LoginPage from "./pages/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
