@@ -172,6 +172,11 @@ const EntryForm = () => {
         selfie_url: selfieUrl,
         entry_type:
           userType === "resident_unpaid" ? "resident_unpaid" : "normal",
+        category: formData.is_vendor
+          ? "Vendor (Grab/Foodpanda/J&T/dll)"
+          : formData.is_other
+          ? `Lain-lain (${formData.other_reason})`
+          : "Pelawat Biasa",
         timestamp: new Date().toISOString(),
       };
       await notifyTelegram(telegramPayload);
@@ -231,6 +236,13 @@ const EntryForm = () => {
             <p><strong>🏠 Rumah:</strong> {submittedData.house_number}</p>
             <p><strong>📞 Telefon:</strong> {submittedData.phone_number}</p>
             <p><strong>🚗 Plat:</strong> {submittedData.plate_number}</p>
+            {submittedData.is_vendor && (
+                <p><strong>📦 Kategori:</strong> Vendor (Grab/Foodpanda/J&T/dll)</p>
+              )}
+              {submittedData.is_other && (
+                <p><strong>📦 Kategori:</strong> Lain-lain ({submittedData.other_reason})</p>
+              )}
+
             <p><strong>🕒 Masa:</strong> {submittedData.timestamp}</p>
           </div>
           <div className="mt-6 text-xs text-gray-500">
