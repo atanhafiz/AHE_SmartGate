@@ -6,12 +6,15 @@ const GuardDashboard = () => {
   const [showForcedEntryModal, setShowForcedEntryModal] = useState(false)
   const { entries } = useEntries()
 
-  // Get recent entries (last 24 hours)
-  const recentEntries = entries.filter(entry => {
-    const entryTime = new Date(entry.timestamp)
-    const now = new Date()
-    const hoursDiff = (now - entryTime) / (1000 * 60 * 60)
-    return hoursDiff <= 24
+  // ✅ Get entries for "today" (ikut tarikh sebenar Malaysia)
+  const todayEntries = entries.filter(entry => {
+    const entryDate = new Date(entry.timestamp).toLocaleDateString('ms-MY', {
+      timeZone: 'Asia/Kuala_Lumpur',
+    })
+    const todayDate = new Date().toLocaleDateString('ms-MY', {
+      timeZone: 'Asia/Kuala_Lumpur',
+    })
+    return entryDate === todayDate
   })
 
   return (
@@ -52,21 +55,21 @@ const GuardDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card text-center">
           <div className="text-3xl font-bold text-primary-600 mb-2">
-            {recentEntries.length}
+            {todayEntries.length}
           </div>
           <div className="text-gray-600">Entries Today</div>
         </div>
 
         <div className="card text-center">
           <div className="text-3xl font-bold text-green-600 mb-2">
-            {recentEntries.filter(e => e.entry_type === 'normal').length}
+            {todayEntries.filter(e => e.entry_type === 'normal').length}
           </div>
           <div className="text-gray-600">Normal Entries</div>
         </div>
 
         <div className="card text-center">
           <div className="text-3xl font-bold text-red-600 mb-2">
-            {recentEntries.filter(e => e.entry_type === 'forced_by_guard').length}
+            {todayEntries.filter(e => e.entry_type === 'forced_by_guard').length}
           </div>
           <div className="text-gray-600">Forced Entries</div>
         </div>
