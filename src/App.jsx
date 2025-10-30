@@ -96,17 +96,20 @@ function AppContent() {
 
         {/* 🔸 Dropdown Menu (Mobile Only) */}
         {menuOpen && (
-  <div className="absolute right-4 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-    <ul className="py-2 text-gray-700 text-sm">
+  <div
+    className="absolute right-4 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 
+               animate-fadeIn"
+  >
+    <ul className="py-2 text-gray-700 text-sm divide-y divide-gray-200">
       <li>
         <button
           onClick={() => {
             setMenuOpen(false);
             navigate("/");
           }}
-          className="block w-full text-left px-4 py-2 hover:bg-sky-100"
+          className="block w-full text-left px-4 py-2 hover:bg-sky-100 transition-colors duration-150"
         >
-          🏠 Visitor Check-In
+          Visitor
         </button>
       </li>
       <li>
@@ -115,9 +118,9 @@ function AppContent() {
             setMenuOpen(false);
             navigate("/guard");
           }}
-          className="block w-full text-left px-4 py-2 hover:bg-sky-100"
+          className="block w-full text-left px-4 py-2 hover:bg-sky-100 transition-colors duration-150"
         >
-          🛡️ Guard Dashboard
+          Guard
         </button>
       </li>
       <li>
@@ -126,9 +129,9 @@ function AppContent() {
             setMenuOpen(false);
             navigate("/admin");
           }}
-          className="block w-full text-left px-4 py-2 hover:bg-sky-100"
+          className="block w-full text-left px-4 py-2 hover:bg-sky-100 transition-colors duration-150"
         >
-          📊 Admin Dashboard
+          Admin
         </button>
       </li>
       {session && (
@@ -138,9 +141,9 @@ function AppContent() {
               setMenuOpen(false);
               logout();
             }}
-            className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
+            className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100 transition-colors duration-150"
           >
-            🚪 Logout
+            Logout
           </button>
         </li>
       )}
