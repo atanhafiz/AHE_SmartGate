@@ -12,7 +12,6 @@ const AdminDashboard = () => {
     lastWeekEntries: 0,
     lastMonthEntries: 0,
     visitors: 0,
-    residents: 0,
     forcedEntries: 0,
   })
   const [resetInfo, setResetInfo] = useState({
@@ -94,7 +93,6 @@ const AdminDashboard = () => {
         lastWeekEntries: lastWeekEntries.length,
         lastMonthEntries: lastMonthEntries.length,
         visitors: entries.filter(e => e.users?.user_type === 'visitor').length,
-        residents: entries.filter(e => e.users?.user_type === 'resident_unpaid').length,
         forcedEntries: entries.filter(e => e.entry_type === 'forced_by_guard').length,
       })
       setResetInfo({
@@ -105,23 +103,32 @@ const AdminDashboard = () => {
     }
   }, [entries])
 
-  // ✅ Trend with color
+  // ✅ Trend with color + tooltip hover
   const renderTrend = (current, previous, label) => {
     if (previous === 0) return <span className="text-gray-400">—</span>
     const diff = ((current - previous) / previous) * 100
-    if (diff > 0)
-      return (
-        <span className="text-green-600">
-          📈 +{diff.toFixed(1)}% vs last {label}
+    const text =
+      diff > 0
+        ? { color: 'text-green-600', icon: '📈', value: `+${diff.toFixed(1)}%` }
+        : diff < 0
+        ? { color: 'text-red-600', icon: '📉', value: `${diff.toFixed(1)}%` }
+        : { color: 'text-gray-400', icon: '➖', value: 'No change' }
+
+    const tooltipText =
+      label === 'week'
+        ? 'Compared to previous week'
+        : 'Compared to previous month'
+
+    return (
+      <span
+        className={`${text.color} relative group cursor-default`}
+      >
+        {text.icon} {text.value}
+        <span className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded py-1 px-2 whitespace-nowrap shadow-md">
+          {tooltipText}
         </span>
-      )
-    if (diff < 0)
-      return (
-        <span className="text-red-600">
-          📉 {diff.toFixed(1)}% vs last {label}
-        </span>
-      )
-    return <span className="text-gray-400">➖ No change</span>
+      </span>
+    )
   }
 
   return (
@@ -130,9 +137,7 @@ const AdminDashboard = () => {
       <div className="card">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Admin Dashboard
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Admin Dashboard</h2>
             <p className="text-gray-600">
               Monitor all entry activity and system statistics
             </p>
@@ -144,8 +149,8 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         {/* Total */}
         <div className="card text-center">
           <div className="text-4xl mb-1">📊</div>
@@ -190,21 +195,18 @@ const AdminDashboard = () => {
         {/* Visitors */}
         <div className="card text-center">
           <div className="text-4xl mb-1">👥</div>
-          <div className="text-3xl font-bold text-blue-600 mb-1">{stats.visitors}</div>
+          <div className="text-3xl font-bold text-blue-600 mb-1">
+            {stats.visitors}
+          </div>
           <div className="text-gray-600">Visitors</div>
-        </div>
-
-        {/* Residents */}
-        <div className="card text-center">
-          <div className="text-4xl mb-1">🏠</div>
-          <div className="text-3xl font-bold text-purple-600 mb-1">{stats.residents}</div>
-          <div className="text-gray-600">Residents</div>
         </div>
 
         {/* Forced */}
         <div className="card text-center">
           <div className="text-4xl mb-1">🚨</div>
-          <div className="text-3xl font-bold text-red-600 mb-1">{stats.forcedEntries}</div>
+          <div className="text-3xl font-bold text-red-600 mb-1">
+            {stats.forcedEntries}
+          </div>
           <div className="text-gray-600">Forced Entries</div>
         </div>
       </div>
@@ -222,7 +224,7 @@ const AdminDashboard = () => {
         </p>
       </div>
 
-      {/* Table */}
+      {/* All Entries Table */}
       <div>
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           All Entry Records
