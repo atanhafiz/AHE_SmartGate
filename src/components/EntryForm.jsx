@@ -232,19 +232,18 @@ const EntryForm = () => {
           </h2>
           <img src={submittedData.selfie_url} alt="Selfie" className="w-40 h-40 object-cover rounded-lg mx-auto mb-4 border-2 border-green-500 shadow" />
           <div className="text-left text-sm space-y-1">
-            <p><strong>👤 Nama:</strong> {submittedData.name}</p>
-            <p><strong>🏠 Rumah:</strong> {submittedData.house_number}</p>
-            <p><strong>📞 Telefon:</strong> {submittedData.phone_number}</p>
-            <p><strong>🚗 Plat:</strong> {submittedData.plate_number}</p>
-            {submittedData.is_vendor && (
-                <p><strong>📦 Kategori:</strong> Vendor (Grab/Foodpanda/J&T/dll)</p>
-              )}
-              {submittedData.is_other && (
-                <p><strong>📦 Kategori:</strong> Lain-lain ({submittedData.other_reason})</p>
-              )}
-
-            <p><strong>🕒 Masa:</strong> {submittedData.timestamp}</p>
-          </div>
+  <p><strong>👤 Nama:</strong> {submittedData.name}</p>
+  <p><strong>🏠 Rumah:</strong> {submittedData.house_number}</p>
+  <p><strong>📞 Telefon:</strong> {submittedData.phone_number}</p>
+  <p><strong>🚗 Plat:</strong> {submittedData.plate_number}</p>
+  {submittedData.is_vendor && (
+    <p><strong>📦 Kategori:</strong> Vendor (Grab/Foodpanda/J&T/dll)</p>
+  )}
+  {submittedData.is_other && (
+    <p><strong>📦 Kategori:</strong> Lain-lain ({submittedData.other_reason})</p>
+  )}
+  <p><strong>🕒 Masa:</strong> {submittedData.timestamp}</p>
+</div>
           <div className="mt-6 text-xs text-gray-500">
             Tunjukkan skrin ini kepada pengawal keselamatan sebagai bukti pendaftaran.
           </div>
