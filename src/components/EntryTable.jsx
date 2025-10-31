@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 const EntryTable = ({ entries, loading }) => {
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [localEntries, setLocalEntries] = useState(entries || []);
+
 
   const today = new Date();
   const todayStr = today.toDateString();
@@ -85,26 +87,26 @@ const EntryTable = ({ entries, loading }) => {
     if (!confirmDelete) return;
   
     try {
-      // 1️⃣ Delete rekod dalam Supabase
+      // 1️⃣ Delete rekod dari Supabase
       const { error } = await supabase.from("entries").delete().eq("id", id);
       if (error) throw error;
   
-      // 2️⃣ Delete gambar dari storage kalau ada
+      // 2️⃣ Delete gambar dari storage
       if (selfieUrl) {
         const fileName = selfieUrl.split("/").pop();
         await supabase.storage.from("selfies").remove([fileName]);
       }
   
-      // 3️⃣ Padam row terus dari UI tanpa reload
-      const updatedEntries = entries.filter((entry) => entry.id !== id);
-      Object.assign(entries, updatedEntries);
+      // 3️⃣ Update UI terus (padam row)
+      setLocalEntries((prev) => prev.filter((entry) => entry.id !== id));
+  
       toast.success("Rekod berjaya dipadam!");
     } catch (err) {
       console.error("Delete failed:", err.message);
       toast.error("Gagal padam rekod!");
     }
   };
-    
+      
   // ✅ Loading state
   if (loading)
     return (
@@ -190,8 +192,29 @@ const EntryTable = ({ entries, loading }) => {
                 </td>
               </tr>
             ) : (
-              filteredEntries.map((entry) => (
-                <tr key={entry.id} className="hover:bg-gray-50">
+              localEntries
+              .filter((entry) => {
+                const entryDate = new Date(entry.timestamp).toDateString();
+                const matchesFilter =
+                  filter === "all" ||
+                  (filter === "visitor" && entry.user_type === "visitor") ||
+                  (filter === "resident" &&
+                    ["resident_unpaid", "resident_paid"].includes(entry.user_type)) ||
+                  (filter === "vendor" && entry.user_type === "vendor") ||
+                  (filter === "other" && entry.user_type === "other") ||
+                  (filter === "forced" && entry.entry_type === "forced_by_guard") ||
+                  (filter === "today" && entryDate === todayStr);
+            
+                const matchesSearch =
+                  searchTerm === "" ||
+                  entry.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  entry.house_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  entry.notes?.toLowerCase().includes(searchTerm.toLowerCase());
+            
+                return matchesFilter && matchesSearch;
+              })
+              .map((entry) => (
+                   <tr key={entry.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
