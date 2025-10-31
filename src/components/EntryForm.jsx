@@ -19,6 +19,8 @@ const EntryForm = () => {
   const [cameraActive, setCameraActive] = useState(false);
   const [captured, setCaptured] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -382,8 +384,47 @@ const EntryForm = () => {
           </button>
 
           <div className="text-xs text-gray-500 text-center">
-            <p>• Pastikan wajah anda JELAS dalam gambar</p>
+          <p>• Pastikan wajah anda <b>JELAS</b> dalam gambar</p>
           </div>
+
+
+          {/* Nota & butang privasi */}
+          <div className="mt-2 text-[11px] text-gray-500 text-center">
+            🔒 Maklumat ini hanya digunakan untuk tujuan keselamatan & rekod kemasukan.
+          </div>
+
+          <div className="mt-3 text-center">
+            <button
+              type="button"
+              onClick={() => setShowPrivacy(true)}
+              className="text-xs text-gray-500 hover:text-emerald-600 transition-colors flex items-center justify-center mx-auto gap-1"
+            >
+              <span className="text-lg">ⓘ</span> Privasi & Data
+            </button>
+          </div>
+
+          {/* Modal Privasi */}
+          {showPrivacy && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 animate-fadeIn">
+              <div className="bg-white rounded-xl shadow-xl p-6 w-80 text-center">
+                <div className="text-4xl mb-2 text-emerald-600">🔒</div>
+                <h3 className="text-lg font-semibold mb-2 text-gray-800">
+                  Polisi Privasi & Data
+                </h3>
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                  Maklumat selfie dan butiran yang anda masukkan hanya digunakan
+                  untuk tujuan keselamatan <b>KOMUNITI</b>.
+                  Kami tidak akan berkongsi data ini kepada pihak luar.
+                </p>
+                <button
+                  onClick={() => setShowPrivacy(false)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
+          )}
         </form>
 
         <canvas ref={canvasRef} className="hidden" />
