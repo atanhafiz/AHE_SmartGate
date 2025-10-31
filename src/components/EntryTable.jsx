@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { exportToCSV } from "../utils/api";
 import { supabase } from "../lib/supabaseClient";
 import toast from "react-hot-toast";
@@ -7,6 +7,13 @@ const EntryTable = ({ entries, loading }) => {
   const [localEntries, setLocalEntries] = useState(entries || []);
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+
+  // ✅ Auto sync data dari AdminDashboard
+  useEffect(() => {
+    if (entries && entries.length >= 0) {
+      setLocalEntries(entries);
+    }
+  }, [entries]);
 
   const today = new Date();
   const todayStr = today.toDateString();
