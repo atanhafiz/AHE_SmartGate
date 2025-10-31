@@ -155,11 +155,11 @@ const AdminDashboard = () => {
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-6">
-        {/* Total */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {/* Total */}
         <div className="card text-center">
           <div className="text-4xl mb-1">📊</div>
-          <div className="text-3xl font-bold text-primary-600 mb-1">
+          <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1 transition-all duration-300">            
             {stats.totalEntries}
           </div>
           <div className="text-gray-600">Total Entries</div>
@@ -168,7 +168,7 @@ const AdminDashboard = () => {
         {/* Today */}
         <div className="card text-center">
           <div className="text-4xl mb-1">🕒</div>
-          <div className="text-3xl font-bold text-green-600 mb-1">
+          <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1 transition-all duration-300">
             {stats.todayEntries}
           </div>
           <div className="text-gray-600 mb-1">Today's Entries</div>
@@ -178,7 +178,7 @@ const AdminDashboard = () => {
         {/* Week */}
         <div className="card text-center">
           <div className="text-4xl mb-1">🗓️</div>
-          <div className="text-3xl font-bold text-indigo-600 mb-1">
+          <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1 transition-all duration-300">
             {stats.weekEntries}
           </div>
           <div className="text-gray-600 mb-1">Entries This Week</div>
@@ -189,7 +189,7 @@ const AdminDashboard = () => {
         {/* Month */}
         <div className="card text-center">
           <div className="text-4xl mb-1">📆</div>
-          <div className="text-3xl font-bold text-purple-600 mb-1">
+          <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1 transition-all duration-300">
             {stats.monthEntries}
           </div>
           <div className="text-gray-600 mb-1">Entries This Month</div>
@@ -200,35 +200,40 @@ const AdminDashboard = () => {
         {/* Visitors */}
         <div className="card text-center">
           <div className="text-4xl mb-1">👥</div>
-          <div className="text-3xl font-bold text-blue-600 mb-1">{stats.visitors}</div>
+          <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1 transition-all duration-300">
+            {stats.visitors}</div>
           <div className="text-gray-600">Visitors</div>
         </div>
 
         {/* Residents */}
         <div className="card text-center">
           <div className="text-4xl mb-1">🏠</div>
-          <div className="text-3xl font-bold text-purple-600 mb-1">{stats.residents}</div>
+          <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1 transition-all duration-300">
+            {stats.residents}</div>
           <div className="text-gray-600">Residents</div>
         </div>
 
           {/* Vendors */}
           <div className="card text-center">
             <div className="text-4xl mb-1">📦</div>
-            <div className="text-3xl font-bold text-amber-600 mb-1">{stats.vendors}</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1 transition-all duration-300">
+              {stats.vendors}</div>
             <div className="text-gray-600">Vendors</div>
           </div>
 
           {/* Lain-lain */}
           <div className="card text-center">
             <div className="text-4xl mb-1">🧾</div>
-            <div className="text-3xl font-bold text-cyan-600 mb-1">{stats.others}</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1 transition-all duration-300">
+              {stats.others}</div>
             <div className="text-gray-600">Lain-lain Urusan</div>
           </div>
 
         {/* Forced */}
         <div className="card text-center">
           <div className="text-4xl mb-1">🚨</div>
-          <div className="text-3xl font-bold text-red-600 mb-1">{stats.forcedEntries}</div>
+          <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1 transition-all duration-300">
+            {stats.forcedEntries}</div>
           <div className="text-gray-600">Forced Entries</div>
         </div>
       </div>
