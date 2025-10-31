@@ -354,16 +354,29 @@ const EntryForm = () => {
           </div>
 
           {/* Submit */}
-          <button type="submit" disabled={loading || !captured} className="w-full bg-sky-600 hover:bg-sky-700 disabled:bg-gray-400 text-white font-semibold rounded-lg py-3 flex justify-center space-x-2">
+          <button
+            type="submit"
+            disabled={loading || !captured}
+            className={`
+              relative overflow-hidden
+              w-full flex justify-center items-center gap-2
+              font-semibold rounded-lg py-3 px-4 text-white
+              transition-all duration-300
+              ${loading || !captured
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 hover:from-emerald-700 hover:to-cyan-600 active:scale-[0.98] animate-softPulse shadow-glow"
+              }
+            `}
+          >
             {loading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Menghantar...</span>
+                <span>Memproses...</span>
               </>
             ) : (
               <>
-                <span>📤</span>
-                <span>Hantar Rekod</span>
+                <span>✅</span>
+                <span>Daftar Masuk</span>
               </>
             )}
           </button>
