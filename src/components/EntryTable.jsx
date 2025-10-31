@@ -4,16 +4,15 @@ import { supabase } from "../lib/supabaseClient";
 import toast from "react-hot-toast";
 
 const EntryTable = ({ entries, loading }) => {
+  const [localEntries, setLocalEntries] = useState(entries || []);
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [localEntries, setLocalEntries] = useState(entries || []);
-
 
   const today = new Date();
   const todayStr = today.toDateString();
 
   // ✅ Filter logic
-  const filteredEntries = entries.filter((entry) => {
+  const filteredEntries = localEntries.filter((entry) => {
     const entryDate = new Date(entry.timestamp).toDateString();
     const matchesFilter =
       filter === "all" ||
@@ -81,32 +80,34 @@ const EntryTable = ({ entries, loading }) => {
     }
   };
 
-  // ✅ Delete function
+  // ✅ Delete record
   const handleDelete = async (id, selfieUrl) => {
-    const confirmDelete = confirm("Padam rekod ini? Gambar selfie juga akan dipadam.");
+    const confirmDelete = confirm(
+      "Padam rekod ini? Gambar selfie juga akan dipadam."
+    );
     if (!confirmDelete) return;
-  
+
     try {
-      // 1️⃣ Delete rekod dari Supabase
+      // 1️⃣ Padam dari Supabase
       const { error } = await supabase.from("entries").delete().eq("id", id);
       if (error) throw error;
-  
-      // 2️⃣ Delete gambar dari storage
+
+      // 2️⃣ Padam gambar dari storage (jika ada)
       if (selfieUrl) {
         const fileName = selfieUrl.split("/").pop();
         await supabase.storage.from("selfies").remove([fileName]);
       }
-  
-      // 3️⃣ Update UI terus (padam row)
+
+      // 3️⃣ Padam terus dari UI
       setLocalEntries((prev) => prev.filter((entry) => entry.id !== id));
-  
+
       toast.success("Rekod berjaya dipadam!");
     } catch (err) {
       console.error("Delete failed:", err.message);
       toast.error("Gagal padam rekod!");
     }
   };
-      
+
   // ✅ Loading state
   if (loading)
     return (
@@ -174,13 +175,27 @@ const EntryTable = ({ entries, loading }) => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Person</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entry Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photo</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Person
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Type
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Entry Type
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Time
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Photo
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Notes
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Action
+              </th>
             </tr>
           </thead>
 
@@ -192,29 +207,8 @@ const EntryTable = ({ entries, loading }) => {
                 </td>
               </tr>
             ) : (
-              localEntries
-              .filter((entry) => {
-                const entryDate = new Date(entry.timestamp).toDateString();
-                const matchesFilter =
-                  filter === "all" ||
-                  (filter === "visitor" && entry.user_type === "visitor") ||
-                  (filter === "resident" &&
-                    ["resident_unpaid", "resident_paid"].includes(entry.user_type)) ||
-                  (filter === "vendor" && entry.user_type === "vendor") ||
-                  (filter === "other" && entry.user_type === "other") ||
-                  (filter === "forced" && entry.entry_type === "forced_by_guard") ||
-                  (filter === "today" && entryDate === todayStr);
-            
-                const matchesSearch =
-                  searchTerm === "" ||
-                  entry.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  entry.house_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  entry.notes?.toLowerCase().includes(searchTerm.toLowerCase());
-            
-                return matchesFilter && matchesSearch;
-              })
-              .map((entry) => (
-                   <tr key={entry.id} className="hover:bg-gray-50">
+              filteredEntries.map((entry) => (
+                <tr key={entry.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
@@ -278,7 +272,7 @@ const EntryTable = ({ entries, loading }) => {
 
       {/* Summary */}
       <div className="mt-4 text-sm text-gray-600">
-        Showing {filteredEntries.length} of {entries.length} entries
+        Showing {filteredEntries.length} of {localEntries.length} entries
       </div>
     </div>
   );
