@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
 import toast from "react-hot-toast";
+import Confetti from "react-confetti";
 
 const EntryForm = () => {
   const [formData, setFormData] = useState({
@@ -228,10 +229,19 @@ const EntryForm = () => {
     return (
       <div className="bg-green-50 min-h-screen flex items-center justify-center p-6">
         <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md text-center">
+        <Confetti numberOfPieces={120} recycle={false} gravity={0.3} />
           <img src="/favicon.ico" alt="AHE SmartGate" className="w-12 h-12 mx-auto mb-2 opacity-90" />
-          <div className="text-green-600 text-7xl mb-3">✅</div>
-          <h2 className="text-2xl font-extrabold text-gray-800 mb-3 uppercase">
-            PENDAFTARAN BERJAYA
+          <div className="success-wrapper">
+            <div className="success-ring">
+              <div className="success-check">✔</div>
+              <div className="success-sparkle sparkle1"></div>
+              <div className="success-sparkle sparkle2"></div>
+              <div className="success-sparkle sparkle3"></div>
+              <div className="success-shimmer"></div>
+            </div>
+          </div>
+          <h2 className="text-2xl font-extrabold text-gray-800 mb-3 uppercase animate-fadeUp">
+              PENDAFTARAN BERJAYA
           </h2>
           <img src={submittedData.selfie_url} alt="Selfie" className="w-40 h-40 object-cover rounded-lg mx-auto mb-4 border-2 border-green-500 shadow" />
           <div className="text-left text-sm space-y-1">
