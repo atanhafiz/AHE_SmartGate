@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import toast from "react-hot-toast";
 
@@ -17,64 +17,42 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      console.log("🔐 Attempting login:", formData.email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
-
       if (error) throw error;
 
-      console.log("🧩 Login response:", data);
       const user = data.user;
-      console.log("✅ Login success:", user);
 
       // Ensure session persistence
       if (data.session) {
         await supabase.auth.setSession({
           access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
+          refresh_token: data.session.refresh_token,
         });
-        console.log("🔒 Session persisted successfully");
       }
 
-      // Fetch or create profile
-      const { data: profile, error: profileError } = await supabase
+      // Get role
+      const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, role")
+        .select("role")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (profileError) console.warn("⚠️ Profile fetch error:", profileError.message);
-
-      let finalRole = profile?.role;
-      if (!profile) {
-        // auto create if not exist
-        const email = formData.email.toLowerCase();
-        const role = email.includes("admin")
+      const role =
+        profile?.role ||
+        (formData.email.includes("admin")
           ? "admin"
-          : email.includes("guard")
+          : formData.email.includes("guard")
           ? "guard"
-          : "visitor";
-        const fullName = email.split("@")[0];
-
-        const { error: insertErr } = await supabase
-          .from("profiles")
-          .insert([{ id: user.id, full_name: fullName, role }]);
-
-        if (insertErr) throw new Error("Failed to create user profile");
-        finalRole = role;
-        console.log("🆕 Auto-created profile:", role);
-      }
+          : "visitor");
 
       toast.success("Welcome back!");
-      console.log("🎯 Redirecting user role:", finalRole);
-
-      if (finalRole === "admin") navigate("/admin");
-      else if (finalRole === "guard") navigate("/guard");
+      if (role === "admin") navigate("/admin");
+      else if (role === "guard") navigate("/guard");
       else navigate("/");
     } catch (err) {
-      console.error("❌ Login error:", err.message);
       toast.error(err.message || "Login failed, please try again.");
     } finally {
       setLoading(false);
@@ -82,77 +60,93 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            AHE SmartGate Login
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Access guard and admin functions
-          </p>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* 🌈 Header Section */}
+      <div className="bg-gradient-to-r from-blue-700 via-sky-600 to-cyan-500 text-white text-center py-10 shadow-md">
+        <div className="flex flex-col items-center justify-center">
+          <img
+            src="/favicon.ico"
+            alt="AHE SmartGate Logo"
+            className="w-16 h-16 mb-2 rounded-full shadow-lg bg-white p-2"
+          />
+          <h1 className="text-2xl font-extrabold tracking-wide">
+            AHE SmartGate Portal
+          </h1>
+          <p className="text-sm opacity-90">Authorized Personnel Login Only</p>
         </div>
+      </div>
 
-        <div className="card">
-          <form onSubmit={handleSubmit} className="space-y-6">
+      {/* 🔐 Login Card */}
+      <div className="flex-grow flex items-center justify-center px-4 py-10">
+        <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
+          <h2 className="text-lg font-semibold text-gray-800 text-center mb-6">
+            Sign in to your account
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
               </label>
               <input
-                id="email"
-                name="email"
                 type="email"
-                required
+                name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="input-field mt-1"
-                placeholder="Enter your email"
+                required
+                placeholder="you@example.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
-                id="password"
-                name="password"
                 type="password"
-                required
+                name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="input-field mt-1"
-                placeholder="Enter your password"
+                required
+                placeholder="••••••••"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg shadow transition-colors disabled:opacity-50"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Signing in..." : "Login"}
             </button>
           </form>
 
+          <p className="text-sm text-gray-500 mt-6 text-center">
+            Don’t have an account?{" "}
+            <Link
+              to="/register"
+              className="text-blue-600 font-semibold hover:underline"
+            >
+              Register
+            </Link>
+          </p>
+
           <div className="mt-6 text-center">
-            <a
-              href="/"
-              className="text-primary-600 hover:text-primary-500 text-sm font-medium"
+            <Link
+              to="/"
+              className="text-blue-500 hover:underline text-sm font-medium"
             >
               ← Back to Visitor Check-In
-            </a>
+            </Link>
           </div>
         </div>
+      </div>
 
-        <div className="card bg-gray-50">
-          <h3 className="text-sm font-medium text-gray-800 mb-2">Demo Credentials</h3>
-          <div className="text-xs text-gray-600 space-y-1">
-            <div><strong>Guard:</strong> guard@example.com / password123</div>
-            <div><strong>Admin:</strong> admin@example.com / password123</div>
-          </div>
-        </div>
+      {/* Footer */}
+      <div className="text-center text-xs text-gray-400 py-4">
+        © {new Date().getFullYear()} AHE Technology Sdn Bhd. All rights reserved.
       </div>
     </div>
   );
