@@ -423,8 +423,7 @@ const EntryForm = () => {
                 </h3>
                 <p className="text-sm text-gray-600 mb-4 leading-relaxed">
                   Maklumat selfie dan butiran yang anda masukkan hanya digunakan
-                  untuk tujuan keselamatan <b>KOMUNITI</b>.
-                  Kami tidak akan berkongsi data ini kepada pihak luar.
+                          untuk tujuan keselamatan <b>KOMUNITI</b>.
                 </p>
                 <button
                   onClick={() => setShowPrivacy(false)}
