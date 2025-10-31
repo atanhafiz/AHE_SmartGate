@@ -83,26 +83,28 @@ const EntryTable = ({ entries, loading }) => {
   const handleDelete = async (id, selfieUrl) => {
     const confirmDelete = confirm("Padam rekod ini? Gambar selfie juga akan dipadam.");
     if (!confirmDelete) return;
-
+  
     try {
-      // 1️⃣ Delete entry from table
+      // 1️⃣ Delete rekod dalam Supabase
       const { error } = await supabase.from("entries").delete().eq("id", id);
       if (error) throw error;
-
-      // 2️⃣ Delete selfie file from storage
+  
+      // 2️⃣ Delete gambar dari storage kalau ada
       if (selfieUrl) {
         const fileName = selfieUrl.split("/").pop();
         await supabase.storage.from("selfies").remove([fileName]);
       }
-
+  
+      // 3️⃣ Padam row terus dari UI tanpa reload
+      const updatedEntries = entries.filter((entry) => entry.id !== id);
+      Object.assign(entries, updatedEntries);
       toast.success("Rekod berjaya dipadam!");
-      setTimeout(() => window.location.reload(), 800);
     } catch (err) {
       console.error("Delete failed:", err.message);
       toast.error("Gagal padam rekod!");
     }
   };
-
+    
   // ✅ Loading state
   if (loading)
     return (
